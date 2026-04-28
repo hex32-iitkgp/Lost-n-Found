@@ -27,18 +27,20 @@ async def get_items(
         items.append(item)
 
     return items
-
 @router.post("/")
 async def create_item(
     title: str = Form(...),
     description: str = Form(...),
     category: str = Form(...),
-    type: str = Form(...),  # lost / found
+    type: str = Form(...),
     location: str = Form(...),
     image: UploadFile = File(...),
     user=Depends(get_current_user)
 ):
-    # ☁️ Upload image
+    # 🔥 PUT IT RIGHT HERE (before DB insert)
+    if category not in CATEGORIES:
+        raise HTTPException(status_code=400, detail="Invalid category")
+
     image_url = await upload_image(image.file)
 
     new_item = {
