@@ -1,22 +1,35 @@
-function ItemCard({ item }) {
+import noimg from "../assets/noimg.png";
+function ItemCard({ item, onClick }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition duration-200">
-
+    <div
+      onClick={onClick}
+      className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md hover:scale-[1.02] transition duration-200 cursor-pointer"
+    >
       {/* IMAGE */}
       <div className="relative">
         <img
-          src={item.image_url || "https://via.placeholder.com/300"}
+          src={item.image_url || noimg}
           alt={item.title}
           className="w-full h-44 object-cover"
         />
 
         {/* BADGE */}
         <span
-          className={`absolute top-3 right-3 px-3 py-1 text-xs font-semibold rounded-full text-white ${
-            item.type === "lost" ? "bg-red-500" : "bg-green-600"
-          }`}
+          className={`absolute top-3 right-3 px-3 py-1 text-xs font-semibold rounded-full text-white shadow-md
+    ${item.status === "resolved"
+              ? "bg-blue-600"
+              : item.claims && item.claims.length > 0
+                ? "bg-green-600"
+                : "bg-red-500"
+            }`}
         >
-          {item.type?.toUpperCase()}
+          {
+            item.status === "resolved"
+              ? "APPROVED"
+              : item.claims && item.claims.length > 0
+                ? "CLAIMED"
+                : "UNCLAIMED"
+          }
         </span>
       </div>
 

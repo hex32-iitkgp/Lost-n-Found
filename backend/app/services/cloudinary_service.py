@@ -7,6 +7,6 @@ cloudinary.config(
     api_secret="5p79HWfxBcQXHlEXkV0t3QQiV2M"
 )
 
-async def upload_image(file):
+def upload_image(file):  #  make it sync
     result = cloudinary.uploader.upload(file)
     return result["secure_url"]

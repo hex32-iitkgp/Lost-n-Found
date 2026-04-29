@@ -17,7 +17,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    fetchUser();
+    if (localStorage.getItem("token")) {
+      fetchUser();
+    }
   }, []);
 
   return (

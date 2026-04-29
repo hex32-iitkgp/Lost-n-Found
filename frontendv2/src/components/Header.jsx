@@ -3,6 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import ProfileSidebar from "./ProfileSidebar";
 import { ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ppo from "../assets/ppo.png";
 
 
 function Header({ theme = "found" }) {
@@ -49,13 +50,13 @@ function Header({ theme = "found" }) {
         </div>
 
         {/* RIGHT SECTION */}
-        {isLoggedIn ? (
+        {!(isLoggedIn) ? (
           <div
-            onClick={() => setOpen(true)}
+            onClick={() => {setOpen(true); console.log("Opening sidebar for user:", user);}}
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md cursor-pointer hover:bg-white/20 hover:scale-[1.1] transition"
           >
             <img
-              src={user?.profile_pic || "https://via.placeholder.com/40"}
+              src={user?.profile_pic || ppo}
               alt="profile"
               className="w-7 h-7 rounded-full object-cover"
             />
@@ -78,7 +79,7 @@ function Header({ theme = "found" }) {
       </header>
 
       {/* Sidebar */}
-      <ProfileSidebar open={open} setOpen={setOpen} user={user} />
+      <ProfileSidebar isOpen={open} setIsOpen={setOpen} user={user} />
     </>
   );
 }

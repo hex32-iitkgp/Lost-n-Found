@@ -16,14 +16,14 @@ const Footer = () => {
             Helping people reconnect with their lost belongings across campus.
           </p>
           <br />
-          <h3 style={{ marginBottom: "10px" }}>Contact</h3>
+          <h3 style={{ marginBottom: "4px", fontSize: "20px", fontWeight: "bold" }}>Contact</h3>
           <p>Email: support.lnf@gmail.com</p>
           <p>Made with ❤️ at IIT Kharagpur</p>
         </div>
 
         {/* MIDDLE */}
         <div className="footer-section">
-          <h3 style={{ marginBottom: "8px" }}>Quick Links</h3>
+          <h3 style={{ marginBottom: "8px", fontSize: "20px", fontWeight: "bold" }}>Quick Links</h3>
           <ul>
             <li><a onClick={() => navigate("/")}>Home</a></li>
             <li><a onClick={() => navigate("/")}>Browse Items</a></li>

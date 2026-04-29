@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../services/auth";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 function Login() {
     const navigate = useNavigate();
-
+    const { fetchUser } = useContext(AuthContext);
+    const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({
         email: "",
         password: "",
@@ -16,18 +19,19 @@ function Login() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        setLoading(true);
         try {
             const res = await loginUser(form);
 
-            // store token
             localStorage.setItem("token", res.data.access_token);
 
-            // redirect
+            await fetchUser(); // 🔥 important
             navigate("/");
-            window.location.reload(); // quick refresh to update UI
         } catch (err) {
-            alert("Invalid credentials");
+            setLoading(false);
+            alert(err.response?.data?.detail || "Login failed");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -62,9 +66,10 @@ function Login() {
 
                     <button
                         type="submit"
-                        className="w-full bg-reportsStart text-white py-3 rounded-lg hover:opacity-90 transition"
+                        disabled={loading}
+                        className="w-full bg-reportsStart text-white py-3 rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Login
+                        {loading ? "Logging in..." : "Login"}
                     </button>
 
                 </form>

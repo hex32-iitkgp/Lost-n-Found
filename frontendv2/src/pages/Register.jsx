@@ -30,7 +30,7 @@ function Register() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-reportsEnd via-white to-reportsStart border-b-8 border-reportsStart">
 
-            <div className="bg-white p-8 rounded-xl shadow-md w-[350px] transition-shadow duration-300 animate-slideUp">
+            <div className="bg-white p-8 rounded-xl shadow-md w-[350px] hover:shadow-2xl transition-shadow duration-300 animate-slideUp">
 
                 <h2 className="text-2xl font-semibold mb-6 text-center">
                     Register
