@@ -11,25 +11,6 @@ from bson import ObjectId
 router = APIRouter(prefix="/items", tags=["Items"])
 
 
-@router.get("/")
-async def get_items(
-    category: str = Query(default="All"),
-    type: str = Query(default=None)  # lost / found
-):
-    query = {}
-
-    if category != "All":
-        query["category"] = category
-
-    if type:
-        query["type"] = type
-
-    items = []
-    async for item in items_collection.find(query):
-        item["_id"] = str(item["_id"])
-        items.append(item)
-
-    return items
 @router.post("/")
 async def create_item(
     title: str = Form(...),
@@ -55,7 +36,8 @@ async def create_item(
         "image_url": image_url,
         "reported_by": str(user["_id"]),
         "status": "open",
-        "date_reported": datetime.utcnow()
+        "date_reported": datetime.utcnow(),
+        "claims": []
     }
 
     result = await items_collection.insert_one(new_item)
@@ -184,3 +166,83 @@ async def get_items(
         items.append(item)
 
     return items
+
+@router.post("/{item_id}/claim")
+async def claim_item(
+    item_id: str,
+    message: str = Form(...),
+    user=Depends(get_current_user)
+):
+    item = await items_collection.find_one({"_id": ObjectId(item_id)})
+
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    # ❌ Prevent claiming your own item
+    if item["reported_by"] == str(user["_id"]):
+        raise HTTPException(status_code=400, detail="You cannot claim your own item")
+
+    claim = {
+        "user_id": str(user["_id"]),
+        "message": message,
+        "status": "pending"
+    }
+
+    await items_collection.update_one(
+        {"_id": ObjectId(item_id)},
+        {"$push": {"claims": claim}}
+    )
+
+    return {"message": "Claim request sent"}
+
+@router.get("/{item_id}/claims")
+async def get_claims(
+    item_id: str,
+    user=Depends(get_current_user)
+):
+    item = await items_collection.find_one({"_id": ObjectId(item_id)})
+
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    # 🔐 Only owner can see claims
+    if item["reported_by"] != str(user["_id"]):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    return item.get("claims", [])
+
+
+@router.put("/{item_id}/claim/{claim_user_id}")
+async def respond_to_claim(
+    item_id: str,
+    claim_user_id: str,
+    action: str = Form(...),  # accept / reject
+    user=Depends(get_current_user)
+):
+    item = await items_collection.find_one({"_id": ObjectId(item_id)})
+
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    # 🔐 Only owner can respond
+    if item["reported_by"] != str(user["_id"]):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    claims = item.get("claims", [])
+
+    for claim in claims:
+        if claim["user_id"] == claim_user_id:
+            if action == "accept":
+                claim["status"] = "accepted"
+
+                # 🎯 Mark item as resolved
+                item["status"] = "resolved"
+            else:
+                claim["status"] = "rejected"
+
+    await items_collection.update_one(
+        {"_id": ObjectId(item_id)},
+        {"$set": {"claims": claims, "status": item["status"]}}
+    )
+
+    return {"message": f"Claim {action}ed"}
