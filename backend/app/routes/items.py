@@ -47,6 +47,46 @@ async def create_item(
         "item_id": str(result.inserted_id)
     }
 
+@router.get("/")
+async def get_items(
+    type: str = Query(default=None),
+    category: str = Query(default="All"),
+    search: str = Query(default=None),
+    location: str = Query(default=None),
+    limit: int = 20,
+    skip: int = 0
+):
+    query = {}
+
+    if type:
+        query["type"] = type
+
+    if category != "All":
+        query["category"] = category
+
+    # 🔍 Step 1: Description search
+    if search:
+        query["$or"] = [
+            {"title": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}}
+        ]
+
+    # 📍 Step 2: Location filter (applies on above result)
+    if location:
+        query["location"] = {"$regex": location, "$options": "i"}
+
+    cursor = items_collection.find(query)\
+        .sort("date_reported", -1)\
+        .skip(skip)\
+        .limit(limit)
+
+    items = []
+    async for item in cursor:
+        item["_id"] = str(item["_id"])
+        items.append(item)
+
+    return items
+
 
 from fastapi import Query
 
@@ -136,36 +176,7 @@ from bson import ObjectId
 
 from fastapi import Query
 
-@router.get("/")
-async def get_items(
-    category: str = Query(default="All"),
-    type: str = Query(default=None),
-    search: str = Query(default=None)
-):
-    query = {}
 
-    if category != "All":
-        query["category"] = category
-
-    if type:
-        query["type"] = type
-
-    # 🔎 Search support
-    if search:
-        query["$or"] = [
-            {"title": {"$regex": search, "$options": "i"}},
-            {"description": {"$regex": search, "$options": "i"}}
-        ]
-
-    items = []
-
-    cursor = items_collection.find(query).sort("date_reported", -1)
-
-    async for item in cursor:
-        item["_id"] = str(item["_id"])
-        items.append(item)
-
-    return items
 
 @router.post("/{item_id}/claim")
 async def claim_item(

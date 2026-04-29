@@ -13,7 +13,7 @@ function ProfileSidebar({ open, setOpen, user }) {
       {/* SIDEBAR */}
       <div
         className={`fixed right-0 top-0 w-80 h-full bg-white shadow-lg p-5 z-50
-        transform transition-transform duration-300 ease-in-out
+        transform transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]
         ${open ? "translate-x-0" : "translate-x-full"}`}
       >
         <button onClick={() => setOpen(false)}>Close</button>

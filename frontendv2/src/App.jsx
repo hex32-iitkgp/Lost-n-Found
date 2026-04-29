@@ -1,36 +1,26 @@
-import Header from "./components/Header";
-import { AuthContext } from "./context/AuthContext";
-import { useState } from "react";
-import profilePic from "./assets/pp.png";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Footer from "./components/Footer";
+import Home from "./pages/Home";
+// later:
+// import Login from "./pages/Login";
+// import Register from "./pages/Register";
 
 function App() {
-  // 🔥 Fake user for testing (temporary)
-  const [user] = useState({
-    name: "John Doe",
-    place: "Campus Hostel",
-    profile_pic: profilePic,
-  });
-
   return (
-    <AuthContext.Provider value={{ user }}>
-      <div className="min-h-screen bg-gray-100">
-        
-        {/* HEADER */}
-        <Header theme="found" />
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Routes>
+        <Footer />
+      </Router>
 
-        {/* MAIN CONTENT (dummy for now) */}
-        <main className="p-6">
-          <h2 className="text-2xl font-semibold mb-4">
-            Test Content Area
-          </h2>
-
-          <p>
-            Click on the profile on top right → sidebar should open with blur.
-          </p>
-        </main>
-
-      </div>
-    </AuthContext.Provider>
+    </AuthProvider>
   );
 }
 
