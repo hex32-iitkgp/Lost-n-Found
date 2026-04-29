@@ -152,23 +152,23 @@ async def delete_item(
 from fastapi import Query
 from bson import ObjectId
 
+from fastapi import Query
+
 @router.get("/")
 async def get_items(
-    type: str = Query(default=None),          # lost / found
     category: str = Query(default="All"),
+    type: str = Query(default=None),
     search: str = Query(default=None)
 ):
     query = {}
 
-    # 🔴 Filter by type
-    if type:
-        query["type"] = type
-
-    # 📦 Filter by category
     if category != "All":
         query["category"] = category
 
-    # 🔎 Search (title + description)
+    if type:
+        query["type"] = type
+
+    # 🔎 Search support
     if search:
         query["$or"] = [
             {"title": {"$regex": search, "$options": "i"}},
