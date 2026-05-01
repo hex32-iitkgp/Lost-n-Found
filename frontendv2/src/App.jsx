@@ -5,9 +5,19 @@ import Register from "./pages/Register";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import About from "./pages/About";
+import { use, useEffect } from "react";
 
 function App() {
   const isLoggedIn = localStorage.getItem("token");
+  useEffect(() => {
+    if (isLoggedIn) {
+      // Force a reload to ensure auth state is updated across the app
+      console.log("Token found on load. Reloading to sync auth state.");
+    }
+    else {
+      console.log("No token found on load. User is not logged in.");
+    }
+  }, []);
 
   return (
     <AuthProvider>

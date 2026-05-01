@@ -287,6 +287,8 @@ async def reject_claim(item_id: str, user_email: str, user=Depends(get_current_u
 
     return {"message": "Claim rejected"}
 
+
+
 # @router.get("/{item_id}/claims")
 # async def get_claims(
 #     item_id: str,

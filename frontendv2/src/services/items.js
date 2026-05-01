@@ -24,3 +24,6 @@ export const approveClaim = (itemId, email) =>
 
 export const rejectClaim = (itemId, email) =>
   API.post(`/items/${itemId}/claims/${email}/reject`);
+
+export const getAIrecommendation = (id) =>
+  API.get(`/items/${id}/recommendation`);

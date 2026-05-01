@@ -1,13 +1,14 @@
 import Header from "../components/Header";
 import ItemCard from "../components/ItemCard";
-import { Plus, Search, ArrowLeft, ArrowRight } from "lucide-react";
+import { Plus, Search, ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
 import { act, use, useEffect, useState } from "react";
 import hero from "../assets/navbar.svg";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import noimg from "../assets/noimg.png";
-import { getItems, getMyItems, claimItem, createItem, deleteItem, approveClaim, rejectClaim, updateItem } from "../services/items";
+import { getItems, getMyItems, claimItem, createItem, deleteItem, approveClaim, rejectClaim, updateItem, getAIrecommendation } from "../services/items";
 import { Navigate } from "react-router-dom";
+import LegendModal from "../components/LegModal";
 
 const categories = [
   "All", "ID Cards", "Wallets", "Keys", "Electronics",
@@ -21,6 +22,7 @@ function Home() {
   const [activeCategory, setActiveCategory] = useState("All");
   const { user, fetchUser, loadingo } = useContext(AuthContext);
   const [items, setItems] = useState([]);
+  const [AIitems, setAIitems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [locationText, setLocationText] = useState("");
@@ -40,17 +42,37 @@ function Home() {
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [shown, setShown] = useState(false);
+  const [legOpen, setLegOpen] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
-  // useEffect(() => {
-  //   if (localStorage.getItem("token") !== null) {
-  //     if (user === null) {
-  //       localStorage.removeItem("token");
-  //       console.log("Session expired. Logging out.");
-  //       alert("Session expired. Please log in again.");
-  //       <Navigate to="/login" />;
-  //     }
-  //   }
-  // }, []);
+  window.onload = () => async function () {
+    await fetchUser();
+    if (!loadingo && user === null && localStorage.getItem("token")) {
+      localStorage.removeItem("token");
+      alert("Session expired. Please log in again.");
+      window.location.href = "/login";
+    }
+  }();
+
+  useEffect(() => async () => {
+    if (showAIModal) {
+      setAiLoading(true);
+      const fetchRecommendation = async () => {
+        try {
+          const res = await getAIrecommendation(selectedItem._id);
+          setAIitems(res.data);
+        } catch (err) {
+          console.error(err);
+        }
+        finally {
+          setAiLoading(false);
+        }
+      };
+
+      fetchRecommendation();
+    }
+  }, [showAIModal]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -183,6 +205,7 @@ function Home() {
       alert("Claim failed");
     } finally {
       setClaiming(false);
+      fetchItems(); // refresh list to show new claim
     }
   };
 
@@ -211,7 +234,7 @@ function Home() {
       fetchItems(); // refresh list
     } catch (err) {
       console.error(err);
-      alert("Failed to submit item");
+      alert("Data Insufficient or Invalid. Please check and try again.");
     } finally {
       setCreating(false);
       fetchItems(); // refresh list
@@ -219,6 +242,7 @@ function Home() {
   };
 
   const handleDelete = async () => {
+    setDeleting(true);
     if (!confirm("Delete this item?")) return;
 
     try {
@@ -228,6 +252,10 @@ function Home() {
       fetchItems();
     } catch {
       alert("Delete failed");
+    }
+    finally {
+      setDeleting(false);
+      fetchItems();
     }
   };
 
@@ -282,7 +310,7 @@ function Home() {
       formData.append("location", selectedItem.location);
       formData.append("type", selectedItem.type);
       formData.append("status", "resolved");
-      updateItem(selectedItem._id, formData);
+      await updateItem(selectedItem._id, formData);
       console.log("Item marked as resolved");
       setSelectedItem((prev) => ({
         ...prev,
@@ -292,8 +320,8 @@ function Home() {
     } catch {
       alert("Error updating item");
     } finally {
+      await fetchItems(); // refresh list to update statuses
       setFinding(false);
-      fetchItems(); // refresh list to update statuses
     }
   };
 
@@ -341,14 +369,14 @@ function Home() {
       alert("Session expired. Please log in again.");
       window.location.href = "/login";
     }
-  }, [user, loading]);
+  }, [user, loadingo]);
 
   return (
     <div className="bg-gray-100 min-h-screen pb-20">
 
       {/* HEADER */}
       <Header theme={activeTab === "my" ? "reports" : activeTab} shown={shown} />
-
+      <LegendModal isOpen={legOpen} setIsOpen={setLegOpen} />
       {/* HERO */}
       <div
         className={`px-10 py-16 flex justify-between items-center text-white transition-colors duration-300
@@ -358,7 +386,7 @@ function Home() {
               ? "bg-lost"
               : "bg-gradient-to-r from-reportsStart to-reportsEnd"
           }`}
-          style={{paddingTop: "100px"}}
+        style={{ paddingTop: "100px" }}
       >
 
         <div>
@@ -393,7 +421,7 @@ function Home() {
           {/* SLIDING INDICATOR */}
           <div
             className={`absolute top-1 left-1 h-[calc(100%-8px)] w-1/3 rounded-full transition-all duration-300
-      ${activeTab === "found"
+                ${activeTab === "found"
                 ? "translate-x-0 bg-found"
                 : activeTab === "lost"
                   ? "translate-x-full bg-gray-800"
@@ -411,9 +439,9 @@ function Home() {
                 onClick={() => !isDisabled && setActiveTab(tab)}
                 disabled={isDisabled}
                 className={`flex-1 py-2 text-sm font-medium z-10 transition
-            ${activeTab === tab ? "text-white" : "text-gray-700"}
-            ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}
-          `}
+                    ${activeTab === tab ? "text-white" : "text-gray-700"}
+                    ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}
+                  `}
               >
                 {tab === "found"
                   ? "Found"
@@ -423,6 +451,7 @@ function Home() {
               </button>
             );
           })}
+
         </div>
 
         {/* RESULT COUNT */}
@@ -435,6 +464,10 @@ function Home() {
           }`}>
           {items.length} results
         </span>
+        <button className="ml-3 rounded-full bg-black/80 p-2 hover:bg-gray-400 text-sm text-white transition"
+          onClick={() => setLegOpen(true)}>
+          Legend {">"}
+        </button>
 
       </div>
       <div className="px-10 mt-4 flex justify-center">
@@ -547,11 +580,11 @@ function Home() {
       {/* FLOAT BUTTON */}
       <button onClick={() => setShowCreateModal(true)} className={`fixed bottom-6 right-6 w-14 h-14 rounded-full text-white shadow-lg hover:scale-105 transition
       ${activeTab === "found"
-        ? "bg-found"
-        : activeTab === "lost"
-          ? "bg-lost"
-          : "bg-gradient-to-br from-reportsStart to-reportsEnd"
-      }`}>
+          ? "bg-found"
+          : activeTab === "lost"
+            ? "bg-lost"
+            : "bg-gradient-to-br from-reportsStart to-reportsEnd"
+        }`}>
         <Plus size={28} className=" translate-y-0 translate-x-3.5" />
       </button>
       {selectedItem && (
@@ -647,9 +680,10 @@ function Home() {
 
                   <button
                     onClick={handleDelete}
-                    className="flex-1 py-2 rounded-lg bg-red-600 text-white hover:opacity-90 transition"
+                    className="flex-1 py-2 rounded-lg bg-red-600 text-white hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={deleting}
                   >
-                    Delete
+                    {deleting ? "Deleting..." : "Delete"}
                   </button>
                   <button
                     onClick={() => setShowClaimsModal(true)}
@@ -686,6 +720,14 @@ function Home() {
                 </button>
               )}
 
+            </div>
+            <div className="mt-2 flex justify-center">
+              <button
+                onClick={() => setShowAIModal(true)}
+                className="w-64 py-2 rounded-2xl bg-gradient-to-r from-reportsStart to-reportsEnd text-white hover:opacity-70 transition"
+              >
+                ✨ Get AI Recommendation
+              </button>
             </div>
           </div>
         </div>

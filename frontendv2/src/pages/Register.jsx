@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { registerUser } from "../services/auth";
+import { registerUser, loginUser } from "../services/auth";
 
 function Register() {
     const navigate = useNavigate();
-
+    const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({
         name: "",
+        email: "",
+        password: "",
+    });
+
+    const [form2, setForm2] = useState({
         email: "",
         password: "",
     });
@@ -15,15 +20,22 @@ function Register() {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmitRegister = async (e) => {
         e.preventDefault();
 
         try {
+            setLoading(true);
             await registerUser(form);
-            alert("Account created! Please login.");
-            navigate("/login");
+            form2.email = form.email;
+            form2.password = form.password;
+            const res = await loginUser(form2);
+            localStorage.setItem("token", res.data.access_token);
+            window.location.href = "/about";
         } catch (err) {
             alert("Registration failed");
+        }
+        finally {
+            setLoading(false);
         }
     };
 
@@ -36,7 +48,7 @@ function Register() {
                     Register
                 </h2>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmitRegister} className="space-y-4">
 
                     <input
                         type="text"
@@ -69,7 +81,7 @@ function Register() {
                         type="submit"
                         className="w-full bg-reportsEnd text-white py-3 rounded-lg hover:opacity-90 transition"
                     >
-                        Register
+                        {loading ? "Registering..." : "Register"}
                     </button>
 
                 </form>

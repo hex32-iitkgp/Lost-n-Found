@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../services/auth";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
+
+
 function Login() {
     const navigate = useNavigate();
     const { fetchUser } = useContext(AuthContext);
     const [loading, setLoading] = useState(false);
+    const [loginSuccess, setLoginSuccess] = useState(false); // New state to track login success
     const [form, setForm] = useState({
         email: "",
         password: "",
@@ -26,8 +29,8 @@ function Login() {
             localStorage.setItem("token", res.data.access_token);
 
             await fetchUser(); // 🔥 important
-            
-            window.location.reload(); // Force reload to update UI based on new auth state
+
+            setLoginSuccess(true); // Force reload to update UI based on new auth state
         } catch (err) {
             setLoading(false);
             alert(err.response?.data?.detail || "Login failed");
@@ -35,6 +38,12 @@ function Login() {
             setLoading(false);
         }
     };
+    useEffect(() => {
+        if (loginSuccess) {
+            navigate("/about");
+        }
+
+    }, [loginSuccess]);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-reportsStart via-white to-reportsEnd border-b-8 border-reportsEnd">
