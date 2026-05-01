@@ -26,7 +26,8 @@ function Login() {
             localStorage.setItem("token", res.data.access_token);
 
             await fetchUser(); // 🔥 important
-            navigate("/");
+            
+            window.location.reload(); // Force reload to update UI based on new auth state
         } catch (err) {
             setLoading(false);
             alert(err.response?.data?.detail || "Login failed");

@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ...existing code...
+# Ignore sensitive backend files
+/backend/app/services/cloudinary_service.py
+/backend/app/database/connection.py
+# ...existing code...

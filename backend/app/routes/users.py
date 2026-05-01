@@ -19,9 +19,10 @@ async def get_me(user=Depends(get_current_user)):
 @router.put("/update")
 async def update_profile(
     name: str = Form(None),
-    place: str = Form(None),
-    old_password: str = Form(None),
-    new_password: str = Form(None),
+    location: str = Form(alias="location", default=None),
+    old_password: str = Form(alias="oldpassword", default=None),
+    new_password: str = Form(alias="newpassword", default=None),
+    profile_pic: UploadFile = File(None),
     user=Depends(get_current_user)
 ):
     update_data = {}
@@ -29,8 +30,12 @@ async def update_profile(
     if name:
         update_data["name"] = name
 
-    if place:
-        update_data["place"] = place
+    if location:
+        update_data["location"] = location
+
+    if profile_pic:
+        image_url = upload_image(profile_pic.file)
+        update_data["profile_pic"] = image_url
 
     # 🔐 Handle password change
     if old_password and new_password:
@@ -50,19 +55,19 @@ async def update_profile(
     return {"message": "Profile updated successfully"}
 
 
-@router.post("/upload-profile-pic")
-async def upload_profile_pic(
-    image: UploadFile = File(...),
-    user=Depends(get_current_user)
-):
-    image_url = await upload_image(image.file)
+# @router.post("/upload-profile-pic")
+# async def upload_profile_pic(
+#     image: UploadFile = File(...),
+#     user=Depends(get_current_user)
+# ):
+#     image_url = await upload_image(image.file)
 
-    await users_collection.update_one(
-        {"_id": user["_id"]},
-        {"$set": {"profile_pic": image_url}}
-    )
+#     await users_collection.update_one(
+#         {"_id": user["_id"]},
+#         {"$set": {"profile_pic": image_url}}
+#     )
 
-    return {
-        "message": "Profile picture updated",
-        "profile_pic": image_url
-    }
+#     return {
+#         "message": "Profile picture updated",
+#         "profile_pic": image_url
+#     }

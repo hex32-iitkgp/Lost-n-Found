@@ -1,7 +1,7 @@
 # app/routes/items.py
 
 from fastapi import APIRouter, Depends, UploadFile, File, Form, Query, HTTPException
-from app.utils.constants import CATEGORIES
+from app.utils.constants.categories import CATEGORIES
 from datetime import datetime
 from app.utils.dependencies import get_current_user
 from app.database.connection import items_collection
@@ -19,27 +19,27 @@ async def create_item(
     category: str = Form(...),
     location: str = Form(...),
     type: str = Form(...),
-    image: UploadFile = File(...),
+    image: UploadFile = File(None),
     user=Depends(get_current_user)
 ):
-    # 🔥 Upload to Cloudinary
-    if (image.file) : image_url = upload_image(image.file)
-    else : image_url = None
-
+    #  Upload to Cloudinary
+    
     item = {
         "title": title,
         "description": description,
-        "category": category,
+        "category": (category if category in CATEGORIES else "Other"),
         "location": location,
         "type": type,
-        "image_url": image_url,
         "owner_id": str(user["_id"]),
         "email": user["email"],
         "date_reported": datetime.utcnow(),
         "status": "open",  # open / resolved
         "claims": []  # to store claim requests
     }
-
+    if (image.file) : 
+        image_url = upload_image(image.file)
+        item["image_url"] = image_url
+    
     result = await items_collection.insert_one(item)
 
     return {
@@ -64,14 +64,14 @@ async def get_items(
     if category != "All":
         query["category"] = category
 
-    # 🔍 Step 1: Description search
+    #  Step 1: Description search
     if search:
         query["$or"] = [
             {"title": {"$regex": search, "$options": "i"}},
             {"description": {"$regex": search, "$options": "i"}}
         ]
 
-    # 📍 Step 2: Location filter (applies on above result)
+    #  Step 2: Location filter (applies on above result)
     if location:
         query["location"] = {"$regex": location, "$options": "i"}
 
@@ -137,6 +137,7 @@ async def update_item(
     type: str = Form(...),
     location: str = Form(...),
     image: UploadFile = File(None),
+    status: str = Form(...),
     user=Depends(get_current_user)
 ):
     item = await items_collection.find_one({"_id": ObjectId(item_id)})
@@ -144,7 +145,7 @@ async def update_item(
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    # 🔐 OWNERSHIP CHECK
+    # OWNERSHIP CHECK
     if item["owner_id"] != str(user["_id"]):
         raise HTTPException(status_code=403, detail="Not authorized")
 
@@ -154,9 +155,10 @@ async def update_item(
         "category": category,
         "type": type,
         "location": location,
+        "status": status,
     }
 
-    # ☁️ If new image provided → upload
+    # If new image provided → upload
     if image:
         image_url = upload_image(image.file)
         update_data["image_url"] = image_url
@@ -178,7 +180,7 @@ async def delete_item(
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    # 🔐 OWNERSHIP CHECK
+    # OWNERSHIP CHECK
     if item["owner_id"] != str(user["_id"]):
         raise HTTPException(status_code=403, detail="Not authorized")
 
@@ -193,9 +195,9 @@ from fastapi import Query
 
 
 
-@router.post("/{item_id}/claim")
+@router.post("/claim")
 async def claim_item(
-    item_id: str,
+    item_id: str = Form(...),
     message: str = Form(...),
     user=Depends(get_current_user)
 ):

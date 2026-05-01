@@ -1,24 +1,25 @@
 import Header from "../components/Header";
 import ItemCard from "../components/ItemCard";
 import { Plus, Search, ArrowLeft, ArrowRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { act, use, useEffect, useState } from "react";
 import hero from "../assets/navbar.svg";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import noimg from "../assets/noimg.png";
-import { getItems, getMyItems, claimItem, createItem, deleteItem, approveClaim, rejectClaim } from "../services/items";
+import { getItems, getMyItems, claimItem, createItem, deleteItem, approveClaim, rejectClaim, updateItem } from "../services/items";
+import { Navigate } from "react-router-dom";
 
 const categories = [
   "All", "ID Cards", "Wallets", "Keys", "Electronics",
   "Mobile Phones", "Laptops", "Chargers", "Earphones",
   "Bags", "Garments", "Shoes", "Books", "Stationery",
-  "Bicycle", "Umbrella"
+  "Bicycle", "Umbrella", "Others"
 ];
 
 function Home() {
   const [activeTab, setActiveTab] = useState("found"); // found | lost | my
   const [activeCategory, setActiveCategory] = useState("All");
-  const { user } = useContext(AuthContext);
+  const { user, fetchUser, loadingo } = useContext(AuthContext);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
@@ -34,6 +35,18 @@ function Home() {
   const [creating, setCreating] = useState(false);
   const [showClaimsModal, setShowClaimsModal] = useState(false);
   const [processingClaim, setProcessingClaim] = useState(null);
+  const [finding, setFinding] = useState(false);
+
+  // useEffect(() => {
+  //   if (localStorage.getItem("token") !== null) {
+  //     if (user === null) {
+  //       localStorage.removeItem("token");
+  //       console.log("Session expired. Logging out.");
+  //       alert("Session expired. Please log in again.");
+  //       <Navigate to="/login" />;
+  //     }
+  //   }
+  // }, []);
 
   const isOwner = (
     selectedItem &&
@@ -45,10 +58,9 @@ function Home() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    category: "",
+    category: "Others",
     location: "",
     type: "lost",
-    image: null,
   });
 
   const handleEdit = () => {
@@ -110,14 +122,13 @@ function Home() {
   };
 
   const handleClaim = async () => {
-    if (claiming) return;
-
     try {
       setClaiming(true);
-
-      await claimItem(selectedItem._id, {
-        message: "This belongs to me",
-      });
+      console.log("Claiming item with ID:", selectedItem._id);
+      const formdat = new FormData();
+      formdat.append("item_id", String(selectedItem._id));
+      formdat.append("message", user.email);
+      await claimItem(selectedItem._id, formdat);
       setSelectedItem(prev => ({
         ...prev,
         claims: [...(prev.claims || []), {
@@ -152,10 +163,9 @@ function Home() {
       setForm({
         title: "",
         description: "",
-        category: "",
+        category: "Others",
         location: "",
         type: "lost",
-        image: null,
       });
 
       fetchItems(); // refresh list
@@ -219,7 +229,29 @@ function Home() {
       setProcessingClaim(null);
     }
   };
+  const handleState = async () => {
+    try {
+      setFinding(true);
+      const formData = new FormData();
+      formData.append("title", selectedItem.title);
+      formData.append("description", selectedItem.description);
+      formData.append("category", selectedItem.category);
+      formData.append("location", selectedItem.location);
+      formData.append("type", selectedItem.type);
+      formData.append("status", "resolved");
+      updateItem(selectedItem._id, formData);
+      console.log("Item marked as resolved");
+      setSelectedItem((prev) => ({
+        ...prev,
+        status: "resolved",
 
+      }));
+    } catch {
+      alert("Error updating item");
+    } finally {
+      setFinding(false);
+    }
+  };
 
   useEffect(() => {
     setPage(0);
@@ -228,6 +260,14 @@ function Home() {
   useEffect(() => {
     fetchItems();
   }, [activeTab, activeCategory, page]);
+
+  useEffect(() => {
+    if (!loadingo && user === null && localStorage.getItem("token")) {
+      localStorage.removeItem("token");
+      alert("Session expired. Please log in again.");
+      window.location.href = "/login";
+    }
+  }, [user, loading]);
 
   return (
     <div className="bg-gray-100 min-h-screen pb-20">
@@ -316,7 +356,7 @@ function Home() {
             ? "bg-green-100 text-green-700"
             : activeTab === "lost"
               ? "bg-red-100 text-red-700"
-              : "bg-gradient-to-br from-reportsStart to-reportsEnd text-white"
+              : "bg-gradient-to-br from-reportsStart to-reportsEnd text-white opacity-60"
           }`}>
           {items.length} results
         </span>
@@ -462,6 +502,7 @@ function Home() {
                 className={`absolute top-3 right-3 px-3 py-1 text-xs font-semibold rounded-full text-white shadow-md
     ${selectedItem.status === "resolved"
                     ? "bg-blue-600"
+
                     : selectedItem.claims && selectedItem.claims.length > 0
                       ? "bg-green-600"
                       : "bg-red-500"
@@ -469,10 +510,12 @@ function Home() {
               >
                 {
                   selectedItem.status === "resolved"
-                    ? "APPROVED"
-                    : selectedItem.claims && selectedItem.claims.length > 0
-                      ? "CLAIMED"
-                      : "UNCLAIMED"
+                    ? (selectedItem.type === "found" ? "APPROVED" : "Lost -> Found")
+                    : selectedItem.type === "lost"
+                      ? "LOST"
+                      : selectedItem.claims && selectedItem.claims.length > 0
+                        ? "CLAIMED"
+                        : "UNCLAIMED"
                 }
               </span>
             </div>
@@ -530,8 +573,17 @@ function Home() {
                   <button
                     onClick={() => setShowClaimsModal(true)}
                     className="flex-1 py-2 rounded-lg bg-blue-600 text-white hover:opacity-90 transition"
+                    hidden={selectedItem.type === "lost"}
                   >
                     Show Claims
+                  </button>
+                  <button
+                    onClick={handleState}
+                    className="flex-1 py-2 rounded-lg bg-green-600 text-white hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    hidden={selectedItem.status === "resolved" || selectedItem.type === "found" || activeTab !== "my"}
+                    disabled={finding}
+                  >
+                    {finding ? "Updating..." : "Found!!"}
                   </button>
                 </>
               )}
@@ -703,7 +755,7 @@ function Home() {
                 {categories
                   .filter((c) => c !== "All")
                   .map((cat) => (
-                    <option key={cat}>{cat}</option>
+                    <option key={cat} selected={form.category === cat}>{cat}</option>
                   ))}
               </select>
               {/* TYPE */}

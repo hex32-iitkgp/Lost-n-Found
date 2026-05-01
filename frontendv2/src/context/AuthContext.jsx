@@ -6,7 +6,7 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-
+  const [loadingo, setLoading] = useState(true);
   const fetchUser = async () => {
     try {
       const res = await getMe();
@@ -15,15 +15,17 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
     }
   };
-
   useEffect(() => {
-    if (localStorage.getItem("token")) {
-      fetchUser();
-    }
+    const init = async () => {
+      if (localStorage.getItem("token")) {
+        await fetchUser();
+      }
+      setLoading(false);
+    };
+    init();
   }, []);
-
   return (
-    <AuthContext.Provider value={{ user, setUser, fetchUser }}>
+    <AuthContext.Provider value={{ user, setUser, fetchUser, loadingo }}>
       {children}
     </AuthContext.Provider>
   );

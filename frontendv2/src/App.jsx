@@ -7,7 +7,7 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 
 function App() {
-  const isLoggedIn = !!localStorage.getItem("token");
+  const isLoggedIn = localStorage.getItem("token");
 
   return (
     <AuthProvider>
@@ -18,7 +18,7 @@ function App() {
           <Route
             path="/"
             element={
-              !(isLoggedIn) ? <Navigate to="/home" /> : <Navigate to="/about" />
+              (isLoggedIn) ? <Navigate to="/home" /> : <Navigate to="/about" />
             }
           />
 
@@ -26,7 +26,7 @@ function App() {
           <Route
             path="/home"
             element={
-              !(isLoggedIn) ? <Home /> : <Navigate to="/about" />
+              (isLoggedIn) ? <Home /> : <Navigate to="/about" />
             }
           />
 

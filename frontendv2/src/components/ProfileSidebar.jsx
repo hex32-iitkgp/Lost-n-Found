@@ -1,25 +1,44 @@
-import { useState, useRef, useContext } from "react";
+import { useState, useRef, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import noimg from "../assets/ppo.png";
+import { updateUser } from "../services/auth";
 
 function SidebarProfile({ isOpen, setIsOpen }) {
-  const { user, setUser } = useContext(AuthContext);
-
+  const { user, fetchUser, setUser } = useContext(AuthContext);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    location: "",
+    image: null,
+    preview: null,
+    oldpassword: "",
+    newpassword: "",
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [hover, setHover] = useState(false);
   const fileRef = useRef();
-
-  const [form, setForm] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    location: user?.location || "",
-    image: null,
-    preview: user?.profile_image || null,
-  });
+  const [passChange, setPassChange] = useState(false);
+  useEffect(() => {
+    if (user && !isEditing) {
+      setForm({
+        name: user.name || "",
+        email: user.email || "",
+        location: user.location || "",
+        image: null,
+        preview: user.profile_pic || null,
+        oldpassword: "",
+        newpassword: "",
+      });
+    }
+  }, [user]);
 
   // 🔄 text input
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (e.target.name === "newpassword" && e.target.value.length !== 0) {
+      setPassChange(true);
+    }
   };
 
   // 📸 open file picker
@@ -45,18 +64,45 @@ function SidebarProfile({ isOpen, setIsOpen }) {
   // 💾 save (frontend only for now)
   const handleSave = async () => {
     try {
-
-      setUser((prev) => ({
-        ...prev,
-        name: form.name,
-        email: form.email,
-        location: form.location,
-        profile_image: form.preview,
-      }));
-
+      setSaving(true);
       setIsEditing(false);
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("email", form.email);
+      formData.append("location", form.location);
+      if (form.image) {
+        formData.append("profile_pic", form.image);
+      }
+      formData.append("oldpassword", form.oldpassword);
+      formData.append("newpassword", form.newpassword);
+
+      await updateUser(formData);
+      fetchUser();
+      if (passChange) {
+        localStorage.removeItem("token");
+        alert("Password changed. Please log in again.");
+        window.location.href = "/login";
+      }
+
     } catch {
       alert("Failed to save");
+    } finally {
+      setSaving(false);
+       // Refresh user data from server
+      setUser((prev) => ({
+        ...prev,
+        name: user.name,
+        email: user.email,
+        location: user.location,
+        image: null,
+        preview: user.profile_pic,
+      }));
+      console.log("Updated user:", {
+        name: user.name,
+        email: user.email,
+        location: user.location,
+        preview: user.profile_pic,
+      });
     }
   };
   const isFormValid = () => {
@@ -164,22 +210,43 @@ function SidebarProfile({ isOpen, setIsOpen }) {
               className={`w-full p-3 border rounded-lg outline-none ${isEditing ? "border-blue-500" : "bg-gray-100"
                 }`}
             />
-
+            {/* Password Change*/}
+            <input
+              type="password"
+              name="oldpassword"
+              placeholder="Current Password"
+              hidden={passChange ? false : true}
+              value={form.oldpassword || ""}
+              disabled={!isEditing}
+              onChange={handleChange}
+              className={`w-full p-3 border rounded-lg outline-none ${isEditing ? "border-blue-500" : "bg-gray-100"
+                }`}
+            />
+            <input
+              type="password"
+              name="newpassword"
+              placeholder="New Password (unchanged)"
+              value={form.newpassword || ""}
+              disabled={!isEditing}
+              onChange={handleChange}
+              className={`w-full p-3 border rounded-lg outline-none ${isEditing ? "border-blue-500" : "bg-gray-100"
+                }`}
+            />
             {/* EDIT / SAVE */}
             <div className="flex justify-end">
               <button
                 onClick={() =>
                   isEditing ? handleSave() : setIsEditing(true)
                 }
-                disabled={isEditing && !isFormValid()}
+                disabled={(isEditing && !isFormValid()) || saving}
                 className={`px-4 py-2 text-white rounded-lg transition
     ${isEditing && !isFormValid()
                     ? "bg-gray-400 cursor-not-allowed flex justify-center"
                     : "bg-blue-600 hover:opacity-90 flex justify-center"
-                  }
+                  } disabled:opacity-50 disabled:cursor-not-allowed
   `}
               >
-                {isEditing ? "Save" : "Edit"}
+                {isEditing ? "Save" : saving ? "Saving..." : "Edit"}
               </button>
             </div>
 

@@ -18,18 +18,22 @@ function ItemCard({ item, onClick }) {
           className={`absolute top-3 right-3 px-3 py-1 text-xs font-semibold rounded-full text-white shadow-md
     ${item.status === "resolved"
               ? "bg-blue-600"
+              : item.type === "lost"
+                ? "bg-yellow-500"
               : item.claims && item.claims.length > 0
                 ? "bg-green-600"
                 : "bg-red-500"
             }`}
         >
           {
-            item.status === "resolved"
-              ? "APPROVED"
-              : item.claims && item.claims.length > 0
-                ? "CLAIMED"
-                : "UNCLAIMED"
-          }
+                  item.status === "resolved"
+                    ? (item.type === "found" ? "Found -> APPROVED" : "Lost -> Found")
+                    : item.type === "lost"
+                      ? "LOST"
+                      : item.claims && item.claims.length > 0
+                        ? "found:CLAIMED"
+                        : "found:UNCLAIMED"
+                }
         </span>
       </div>
 

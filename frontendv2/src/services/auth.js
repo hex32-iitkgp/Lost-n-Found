@@ -9,3 +9,6 @@ export const loginUser = (data) =>
 
 export const getMe = () =>
   API.get("/users/me");
+
+export const updateUser = (data) =>
+  API.put("/users/update", data);

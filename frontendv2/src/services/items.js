@@ -17,7 +17,7 @@ export const updateItem = (id, formData) =>
   API.put(`/items/${id}`, formData);
 
 export const claimItem = (id, formData) =>
-  API.post(`/items/${id}/claim`, formData);
+  API.post(`/items/claim`, formData);
 
 export const approveClaim = (itemId, email) =>
   API.post(`/items/${itemId}/claims/${email}/approve`);
