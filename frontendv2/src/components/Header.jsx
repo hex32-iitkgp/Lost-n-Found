@@ -7,8 +7,9 @@ import ppo from "../assets/ppo.png";
 
 
 function Header({ theme = "found", shown }) {
-  const { user } = useContext(AuthContext);
+  const { user, fetchUser } = useContext(AuthContext);
   const [open, setOpen] = useState(false);
+  const [fetchedUser, setFetchedUser] = useState(null);
   const isLoggedIn = !!localStorage.getItem("token");
 
   const navigate = useNavigate();
@@ -20,15 +21,21 @@ function Header({ theme = "found", shown }) {
   }, []);
 
   const themeStyles = {
-    found: `bg-foundheader${shown ? " bg-black/30 backdrop-blur-md rounded-3xl w-10/12 top-2 pt-2/12" : ""}`,
-    lost: `bg-lostheader${shown ? " bg-black/30 backdrop-blur-md rounded-3xl w-10/12 top-2" : ""}`,
-    reports: `bg-gradient-to-r from-reportsStartheader${shown ? "/30 backdrop-blur-md rounded-3xl w-10/12 top-2" : ""} to-reportsEndheader${shown ? "/30 backdrop-blur-md rounded-3xl w-10/12 top-2" : ""}`,
+    found: `${shown ? " bg-black/30 backdrop-blur-md rounded-3xl top-2" : "bg-foundheader"}`,
+    lost: `${shown ? " bg-black/30 backdrop-blur-md rounded-3xl top-2" : "bg-lostheader"}`,
+    reports: `${shown ? "bg-gradient-to-r from-reportsStartheader/30 to-reportsEndheader/30 backdrop-blur-md rounded-3xl top-2" : "bg-gradient-to-r from-reportsStartheader to-reportsEndheader"}`,
   };
+
+  window.onload = () => {
+    fetchUser();
+    setFetchedUser(true);
+  }
+
   return (
     <>
 
       <header
-        className={` fixed top-0 left-1/2 -translate-x-1/2 z-50 w-full flex justify-between items-center px-6 py-4 text-white transition-all duration-500 ease ${themeStyles[theme]}  `}
+        className={` fixed top-0 left-1/2 -translate-x-1/2 z-50 ${shown ? "w-10/12" : "w-full"} flex justify-between items-center px-6 py-4 text-white transition-all duration-500 ease ${themeStyles[theme]}  `}
 
       >
         {/* LEFT SECTION */}
@@ -62,10 +69,12 @@ function Header({ theme = "found", shown }) {
               className="w-7 h-7 rounded-full object-cover"
             />
 
-            {/* Slightly smaller text */}
-            <span className="text-sm font-medium">Profile</span>
-
-            {/* Proper dropdown arrow */}
+            {/* Slightly smaller text */}<div className="flex flex-col leading-tight">
+              <span className="text-sm font-medium">{(user?.name) ? "Welcome Back," : "Profile"}</span>
+              <span className={`text-xs text-white/70 ${(user?.name) ? "" : " hidden"}`}>{(user?.name) ? user?.name : ""}</span>
+              {/* Proper dropdown arrow */}
+              
+            </div>
             <ChevronDown size={16} className="opacity-80" />
           </div>
         ) : (

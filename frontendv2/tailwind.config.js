@@ -18,24 +18,27 @@ export default {
         foundheader: "#03221bff",
         lostheader: "#300a0aff",
       },
+
       fontFamily: {
         serifCustom: ["Lora", "Iowan Old Style", "Georgia", "serif"],
       },
-    },
-    keyframes: {
+
+      keyframes: {
       slideUp: {
-        "0%": {
-          opacity: "0",
-          transform: "translateY(25px)",
-        },
-        "100%": {
-          opacity: "1",
-          transform: "translateY(0)",
+          "0%": {
+            opacity: "0",
+            transform: "translateY(25px)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
         },
       },
-    },
-    animation: {
+
+      animation: {
       slideUp: "slideUp 0.3s ease-out forwards",
+      },
     },
   },
   plugins: [],
