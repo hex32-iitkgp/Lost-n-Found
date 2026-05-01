@@ -50,7 +50,7 @@ function Header({ theme = "found" }) {
         </div>
 
         {/* RIGHT SECTION */}
-        {!(isLoggedIn) ? (
+        {(isLoggedIn) ? (
           <div
             onClick={() => {setOpen(true); console.log("Opening sidebar for user:", user);}}
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md cursor-pointer hover:bg-white/20 hover:scale-[1.1] transition"
