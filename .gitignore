@@ -219,6 +219,6 @@ __marimo__/
 
 # ...existing code...
 # Ignore sensitive backend files
-/backend/app/services/cloudinary_service.py
-/backend/app/database/connection.py
+cloudinary_service.py
+connection.py
 # ...existing code...
