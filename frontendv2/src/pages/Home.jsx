@@ -32,10 +32,14 @@ function Home() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [claiming, setClaiming] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [showClaimsModal, setShowClaimsModal] = useState(false);
   const [processingClaim, setProcessingClaim] = useState(null);
   const [finding, setFinding] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [shown, setShown] = useState(false);
 
   // useEffect(() => {
   //   if (localStorage.getItem("token") !== null) {
@@ -47,6 +51,17 @@ function Home() {
   //     }
   //   }
   // }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShown(window.scrollY > 150);
+      // console.log((window.scrollY > 200), shown);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [shown]);
 
   const isOwner = (
     selectedItem &&
@@ -63,9 +78,25 @@ function Home() {
     type: "lost",
   });
 
-  const handleEdit = () => {
-    window.alert("To edit this item, please delete and re-create it with the correct information. This is a temporary limitation. We apologize for the inconvenience and are working on adding edit functionality soon!");
-  };
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    category: "Others",
+    location: "",
+    type: "lost",
+  });
+
+  useEffect(() => {
+    if (selectedItem) {
+      setEditForm({
+        title: selectedItem.title,
+        description: selectedItem.description,
+        category: selectedItem.category,
+        location: selectedItem.location,
+        type: selectedItem.type,
+      });
+    }
+  }, [selectedItem]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,6 +105,15 @@ function Home() {
 
   const handleFileChange = (e) => {
     setForm((prev) => ({ ...prev, image: e.target.files[0] }));
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditFileChange = (e) => {
+    setEditForm((prev) => ({ ...prev, image: e.target.files[0] }));
   };
 
   const hasClaimed =
@@ -174,6 +214,7 @@ function Home() {
       alert("Failed to submit item");
     } finally {
       setCreating(false);
+      fetchItems(); // refresh list
     }
   };
 
@@ -208,6 +249,7 @@ function Home() {
     } catch {
       alert("Error approving claim");
     } finally {
+      fetchItems(); // refresh list to update statuses
       setProcessingClaim(null);
     }
   };
@@ -227,6 +269,7 @@ function Home() {
       alert("Error rejecting claim");
     } finally {
       setProcessingClaim(null);
+      fetchItems(); // refresh list to update statuses
     }
   };
   const handleState = async () => {
@@ -250,6 +293,37 @@ function Home() {
       alert("Error updating item");
     } finally {
       setFinding(false);
+      fetchItems(); // refresh list to update statuses
+    }
+  };
+
+  const handleEdit = async () => {
+    try {
+      setEditing(true);
+      const formData = new FormData();
+      Object.keys(editForm).forEach((key) => {
+        formData.append(key, editForm[key]);
+      });
+      formData.append("status", selectedItem.status); // keep status unchanged
+      await updateItem(selectedItem._id, formData);
+      alert("Item updated!");
+      setShowEditModal(false);
+      setEditForm({
+        title: "",
+        description: "",
+        category: "Others",
+        location: "",
+        type: "lost",
+      });
+      fetchItems(); // refresh list
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update item");
+    } finally {
+      setEditing(false);
+      setShowEditModal(false);
+      setSelectedItem(null);
+      fetchItems(); // refresh list
     }
   };
 
@@ -273,7 +347,7 @@ function Home() {
     <div className="bg-gray-100 min-h-screen pb-20">
 
       {/* HEADER */}
-      <Header theme={activeTab === "my" ? "reports" : activeTab} />
+      <Header theme={activeTab === "my" ? "reports" : activeTab} shown={shown} />
 
       {/* HERO */}
       <div
@@ -284,6 +358,7 @@ function Home() {
               ? "bg-lost"
               : "bg-gradient-to-r from-reportsStart to-reportsEnd"
           }`}
+          style={{paddingTop: "100px"}}
       >
 
         <div>
@@ -470,7 +545,13 @@ function Home() {
       </div>
 
       {/* FLOAT BUTTON */}
-      <button onClick={() => setShowCreateModal(true)} className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-found text-white shadow-lg hover:scale-105 transition">
+      <button onClick={() => setShowCreateModal(true)} className={`fixed bottom-6 right-6 w-14 h-14 rounded-full text-white shadow-lg hover:scale-105 transition
+      ${activeTab === "found"
+        ? "bg-found"
+        : activeTab === "lost"
+          ? "bg-lost"
+          : "bg-gradient-to-br from-reportsStart to-reportsEnd"
+      }`}>
         <Plus size={28} className=" translate-y-0 translate-x-3.5" />
       </button>
       {selectedItem && (
@@ -558,7 +639,7 @@ function Home() {
               {isOwner && (
                 <>
                   <button
-                    onClick={handleEdit}
+                    onClick={() => setShowEditModal(true)}
                     className="flex-1 py-2 rounded-lg bg-yellow-500 text-white hover:opacity-90 transition"
                   >
                     Edit
@@ -780,7 +861,7 @@ function Home() {
               <button
                 onClick={handleSubmit}
                 disabled={creating}
-                className="w-full bg-found text-white py-3 rounded-lg hover:opacity-90 transition disabled:opacity-50"
+                className="w-full bg-black text-white py-3 rounded-2xl hover:opacity-90 transition disabled:opacity-50"
               >
                 {creating ? "Submitting..." : "Submit Report"}
               </button>
@@ -790,8 +871,102 @@ function Home() {
         </div>
       )
       }
-    </div >
+      {showEditModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setShowEditModal(false)}
+        >
+          {/* BACKDROP */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          {/* MODAL */}
+          <div
+            className="relative bg-white rounded-xl w-[90%] max-w-lg p-6 shadow-xl animate-slideUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* CLOSE */}
+            <button
+              onClick={() => setShowEditModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-xl font-semibold mb-4">
+              Edit Lost / Found Report
+            </h2>
+
+            <div className="space-y-3">
+
+              <input
+                name="title"
+                placeholder="Title"
+                value={editForm.title}
+                onChange={handleEditChange}
+                className="w-full p-3 border rounded-lg"
+              />
+
+              <textarea
+                name="description"
+                placeholder="Description"
+                value={editForm.description}
+                onChange={handleEditChange}
+                className="w-full p-3 border rounded-lg"
+              />
+
+              <input
+                name="location"
+                placeholder="Location"
+                value={editForm.location}
+                onChange={handleEditChange}
+                className="w-full p-3 border rounded-lg"
+              />
+
+              {/* CATEGORY */}
+              <select
+                name="category"
+                value={editForm.category}
+                onChange={handleEditChange}
+                className="w-full p-3 border rounded-lg"
+              >
+                {categories
+                  .filter((c) => c !== "All")
+                  .map((cat) => (
+                    <option key={cat} selected={form.category === cat}>{cat}</option>
+                  ))}
+              </select>
+              {/* TYPE */}
+              <select
+                name="type"
+                value={editForm.type}
+                onChange={handleEditChange}
+                className="w-full p-3 border rounded-lg"
+              >
+                <option value="lost">Lost</option>
+                <option value="found">Found</option>
+              </select>
+
+              {/* IMAGE */}
+              <input
+                type="file"
+                onChange={handleEditFileChange}
+                className="w-full"
+              />
+
+              {/* SUBMIT */}
+              <button
+                onClick={handleEdit}
+                disabled={editing}
+                className="w-full bg-black text-white py-3 rounded-2xl hover:opacity-90 transition disabled:opacity-50"
+              >
+                {editing ? "Submitting..." : "Submit Edits"}
+              </button>
+
+            </div>
+          </div>
+
+        </div >
+      )}
+    </div>
   );
 }
-
 export default Home;

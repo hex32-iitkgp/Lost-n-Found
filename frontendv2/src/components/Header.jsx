@@ -1,12 +1,12 @@
 import { useContext, useState, useEffect, use } from "react";
 import { AuthContext } from "../context/AuthContext";
 import ProfileSidebar from "./ProfileSidebar";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ppo from "../assets/ppo.png";
 
 
-function Header({ theme = "found" }) {
+function Header({ theme = "found", shown }) {
   const { user } = useContext(AuthContext);
   const [open, setOpen] = useState(false);
   const isLoggedIn = !!localStorage.getItem("token");
@@ -20,22 +20,23 @@ function Header({ theme = "found" }) {
   }, []);
 
   const themeStyles = {
-    found: "bg-foundheader",
-    lost: "bg-lostheader",
-    reports: "bg-gradient-to-r from-reportsStartheader to-reportsEndheader",
+    found: `bg-foundheader${shown ? " bg-black/30 backdrop-blur-md rounded-3xl w-10/12 top-2 pt-2/12" : ""}`,
+    lost: `bg-lostheader${shown ? " bg-black/30 backdrop-blur-md rounded-3xl w-10/12 top-2" : ""}`,
+    reports: `bg-gradient-to-r from-reportsStartheader${shown ? "/30 backdrop-blur-md rounded-3xl w-10/12 top-2" : ""} to-reportsEndheader${shown ? "/30 backdrop-blur-md rounded-3xl w-10/12 top-2" : ""}`,
   };
-
   return (
     <>
+
       <header
-        className={`flex justify-between items-center px-6 py-4 text-white transition-all duration-500 ease ${themeStyles[theme]}`}
+        className={` fixed top-0 left-1/2 -translate-x-1/2 z-50 w-full flex justify-between items-center px-6 py-4 text-white transition-all duration-500 ease ${themeStyles[theme]}  `}
+
       >
         {/* LEFT SECTION */}
         <div className="flex items-center gap-4">
 
           {/* Search Icon Circle */}
           <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
-            <span className="text-lg">🔍</span>
+            <span className="text-lg"><Search /></span>
           </div>
 
           {/* Logo + Text */}
@@ -52,7 +53,7 @@ function Header({ theme = "found" }) {
         {/* RIGHT SECTION */}
         {(isLoggedIn) ? (
           <div
-            onClick={() => {setOpen(true); console.log("Opening sidebar for user:", user);}}
+            onClick={() => { setOpen(true); console.log("Opening sidebar for user:", user); }}
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md cursor-pointer hover:bg-white/20 hover:scale-[1.1] transition"
           >
             <img
@@ -77,6 +78,7 @@ function Header({ theme = "found" }) {
           </button>
         )}
       </header>
+
 
       {/* Sidebar */}
       <ProfileSidebar isOpen={open} setIsOpen={setOpen} user={user} />
