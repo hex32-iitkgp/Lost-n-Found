@@ -53,7 +53,7 @@
 
 .footer {
   background: 
-    url("src/assets/bg.png") no-repeat right center ,
+    url("../assets/bg.png") no-repeat right center ,
     #323232;
   background-size: 40%;
 }
