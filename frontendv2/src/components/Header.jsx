@@ -134,7 +134,7 @@ function Header({ theme = "found", shown, about, onCL }) {
                 My Reports
               </button>
               <button
-                onClick={handleLogout}
+                onClick={() => {handleLogout(); setShowDown(false);}}
                 className="w-full text-left px-4 py-3 hover:bg-red-500/50 transition text-red-300 rounded-xl"
               >
                 Logout

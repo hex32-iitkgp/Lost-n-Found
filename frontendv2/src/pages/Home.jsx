@@ -32,6 +32,7 @@ function Home() {
   const tabs = ["found", "lost", "my"];
   const isLastPage = items.length < (limit); // if we received less than limit items, it's the last page
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem2, setSelectedItem2] = useState(null);
   const [claiming, setClaiming] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -47,6 +48,7 @@ function Home() {
   const [aiLoading, setAiLoading] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageToShow, setImageToShow] = useState(null);
+  const [claiming2, setClaiming2] = useState(false);
   const modalRef = useRef();
 
   useEffect(() => {
@@ -83,7 +85,7 @@ function Home() {
           setAiLoading(true);
 
           const res = await getAIrecommendation(selectedItem._id);
-          setAIitems(res.data);
+          setAIitems(res.data.items);
 
         } catch (err) {
           console.error(err);
@@ -239,6 +241,36 @@ function Home() {
       fetchItems(); // refresh list to show new claim
     }
   };
+
+  const handleClaim2 = async () => {
+    try {
+      setClaiming2(true);
+      console.log("Claiming item with ID:", selectedItem2._id);
+      const formdat = new FormData();
+      formdat.append("item_id", String(selectedItem2._id));
+      formdat.append("message", user.email);
+      await claimItem(selectedItem2._id, formdat);
+      setSelectedItem2(prev => ({
+        ...prev,
+        claims: [...(prev.claims || []), {
+          user_id: user._id,
+          message: user.email,
+          status: "pending",
+        }]
+      }));
+      // alert("Claim sent");
+
+    } catch {
+      // alert("Claim failed");
+    } finally {
+      setClaiming2(false);
+      fetchItems(); // refresh list to show new claim
+    }
+  };
+
+  const hasClaimed2 = selectedItem2?.claims?.some(
+    (c) => String(c.user_id) === String(user?._id)
+  );
 
   const handleSubmit = async () => {
     try {
@@ -714,8 +746,8 @@ function Home() {
             </button>
             {/* CONTENT */}
             <div className="mt-4">
-              <h2 className="text-xl font-semibold">
-                {selectedItem.title}
+              <h2 className="text-2xl font-semibold">
+                {selectedItem.title}<span className="ml-2 text-sm font-normal text-gray-500">.{selectedItem.category}</span>
               </h2>
 
               <p className="text-gray-500 mt-2">
@@ -743,6 +775,7 @@ function Home() {
                   <button
                     onClick={() => setShowEditModal(true)}
                     className="flex-1 py-2 rounded-lg bg-yellow-500 text-white hover:opacity-90 transition"
+                    hidden={selectedItem.status === "resolved"}
                   >
                     Edit
                   </button>
@@ -834,12 +867,119 @@ function Home() {
               ) : AIitems.length === 0 ? (
                 <p className="text-sm text-gray-500 -translate-y-8">No recommendations found</p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="fixed grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-h-[68vh] overflow-y-auto w-full px-4"
+                      style={{ transform: "translateY(-4%)"}}
+                >
                   {AIitems.map((item) => (
-                    <ItemCard key={item._id} item={item} onClick={() => setSelectedItem(item)} />
+                    <ItemCard key={item._id} item={item} probability={item.probability} onClick={() => setSelectedItem2(item)} />
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {selectedItem2 && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setSelectedItem2(null)} // 👈 click outside closes
+        >
+          {/* BACKDROP */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+          {/* MODAL */}
+          <div
+            className="relative bg-white rounded-xl w-[90%] max-w-2xl p-6 shadow-xl animate-slideUp"
+            onClick={(e) => e.stopPropagation()} // 👈 prevents closing when clicking inside
+          >
+            {/* CLOSE BUTTON */}
+
+
+            {/* IMAGE */}
+            <div className="relative hover:cursor-pointer"
+              onClick={() => { setImageToShow(selectedItem2.image_url || noimg); setShowImageModal(true); }}
+            >
+              <img
+                src={selectedItem2.image_url || noimg}
+                alt={selectedItem2.title}
+                className="w-full h-60 object-cover rounded-lg"
+              />
+
+              {/* BADGE */}
+              <span
+                className={`absolute top-3 right-3 px-3 py-1 text-xs font-semibold rounded-full text-white shadow-md
+    ${selectedItem2.status === "resolved"
+                    ? "bg-blue-600"
+
+                    : selectedItem2.claims && selectedItem2.claims.length > 0
+                      ? "bg-green-600"
+                      : "bg-red-500"
+                  }`}
+              >
+                {
+                  selectedItem2.status === "resolved"
+                    ? (selectedItem2.type === "found" ? "APPROVED" : "Lost -> Found")
+                    : selectedItem2.type === "lost"
+                      ? "LOST"
+                      : selectedItem2.claims && selectedItem2.claims.length > 0
+                        ? "CLAIMED"
+                        : "UNCLAIMED"
+                }
+              </span>
+            </div>
+            <button
+              onClick={() => setSelectedItem2(null)}
+              className="absolute top-4 right-4 
+             w-8 h-8 flex items-center justify-center 
+             rounded-full 
+             bg-black backdrop-blur-md 
+             hover:scale-125 text-white
+             transition"
+            >
+              ✕
+            </button>
+            {/* CONTENT */}
+            <div className="mt-4">
+              <h2 className="text-2xl font-semibold">
+                {selectedItem2.title}<span className="ml-2 text-sm font-normal text-gray-500">.{selectedItem2.category}</span>
+              </h2>
+
+              <p className="text-gray-500 mt-2">
+                <MapPin className="inline-block mr-1" />
+                {selectedItem2.location}
+              </p>
+
+              <p className="text-sm mt-2">
+                {selectedItem2.description || "No description"}
+              </p>
+            </div>
+            <div className="mt-2 text-sm text-gray-500">
+              <span className="font-medium text-gray-700">Contact:</span>{" "}
+              <a
+                href={`mailto:${selectedItem2.email}`}
+                className="text-blue-600 hover:underline"
+              >
+                {selectedItem2.email}
+              </a>
+            </div>
+            <div className="mt-6 flex gap-3">
+              {/* NON-OWNER BUTTON */}
+              {selectedItem2.type === "found" && (
+                <button
+                  onClick={handleClaim2}
+                  disabled={claiming2 || hasClaimed2}
+                  className="w-full py-3 rounded-lg text-white font-medium
+             bg-found hover:opacity-90 transition
+             disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {hasClaimed2 ?
+                    "Claim Requested"
+                    : claiming2
+                      ? "Claiming..."
+                      : "Claim Item"}
+                </button>
+              )}
+
             </div>
           </div>
         </div>

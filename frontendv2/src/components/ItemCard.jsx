@@ -1,7 +1,7 @@
 import noimg from "../assets/noimg.png";
 import { MapPin } from "lucide-react";
 
-function ItemCard({ item, onClick }) {
+function ItemCard({ item, probability, onClick }) {
   return (
     <div
       onClick={onClick}
@@ -49,7 +49,7 @@ function ItemCard({ item, onClick }) {
 
         {/* TITLE */}
         <h2 className="font-semibold text-md mt-1">
-          {item.title}
+          {item.title}<span className="text-gray-400 text-sm">.{item.category}</span>
         </h2>
 
         {/* LOCATION */}
@@ -62,7 +62,10 @@ function ItemCard({ item, onClick }) {
         <p className="text-xs text-gray-400 mt-1">
           {new Date(item.date_reported).toLocaleString()}
         </p>
-
+        <p className="bg-radial-to-t from-reportStart to-reportEnd text-sm text-white w-max px-2 py-1 rounded-full mt-2"
+            hidden={!probability}>
+          {probability ? `Similarity: ${Math.round(probability * 100)}%` : "No Similarity Data"}
+        </p>
       </div>
     </div>
   );

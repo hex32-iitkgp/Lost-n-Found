@@ -223,9 +223,9 @@ function About() {
             Login / Sign Up
           </button>
         )}
-        <div className="hero-scroll-hint fade-up">
+        <div className="hero-scroll-hint fade-up" onClick={scrollToNextSection}>
           <div className="arrowkl-container">
-            <span onClick={scrollToNextSection}><div className="arrowkl"></div></span>
+            <span><div className="arrowkl"></div></span>
           </div>
         </div>
       </section>
