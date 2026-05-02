@@ -442,13 +442,14 @@ async def get_ai_recommendation(item_id: str, user=Depends(get_current_user)):
     items = []
     async for it in cursor:
         it["_id"] = str(it["_id"])
+        it["probability"]=scores.get(it["_id"], 0)  # add score to item data
         items.append(it)
 
     # --------- 7. Preserve ranking order ---------
-    id_to_item = {it["_id"]: it for it in items}
-    ordered_items = [id_to_item[mid] for mid in top_ids if mid in id_to_item]
+    # id_to_item = {it["_id"]: it for it in items}
+    # ordered_items = [id_to_item[mid] for mid in top_ids if mid in id_to_item]
 
-    return {"items": ordered_items}
+    return {"items": items}
 
 
 # @router.get("/{item_id}/claims")
@@ -461,7 +462,7 @@ async def get_ai_recommendation(item_id: str, user=Depends(get_current_user)):
 #     if not item:
 #         raise HTTPException(status_code=404, detail="Item not found")
 
-#     # 🔐 Only owner can see claims
+#     # Only owner can see claims
 #     if item["reported_by"] != str(user["_id"]):
 #         raise HTTPException(status_code=403, detail="Not authorized")
 

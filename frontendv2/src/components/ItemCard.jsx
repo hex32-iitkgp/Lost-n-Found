@@ -62,7 +62,7 @@ function ItemCard({ item, probability, onClick }) {
         <p className="text-xs text-gray-400 mt-1">
           {new Date(item.date_reported).toLocaleString()}
         </p>
-        <p className="bg-radial-to-t from-reportStart to-reportEnd text-sm text-white w-max px-2 py-1 rounded-full mt-2"
+        <p className="font-semibold bg-gradient-to-r from-reportsStart to-reportsEnd bg-clip-text text-transparent text-sm w-max px-2 py-1 rounded-full mt-2"
             hidden={!probability}>
           {probability ? `Similarity: ${Math.round(probability * 100)}%` : "No Similarity Data"}
         </p>
