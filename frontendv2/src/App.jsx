@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Footer from "./components/Footer";
+import Footer from "./components/footer";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import { use, useEffect } from "react";
