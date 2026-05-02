@@ -1,11 +1,16 @@
-import { useState, useRef, useContext, useEffect } from "react";
+import { useState, useRef, useContext, useEffect, use } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { show_claimed, getManyItems, removeClaim } from "../services/items";
 import noimg from "../assets/ppo.png";
 import { updateUser } from "../services/auth";
 
-function SidebarProfile({ isOpen, setIsOpen }) {
+function SidebarProfile({ isOpen, setIsOpen, about }) {
   const { user, fetchUser, setUser } = useContext(AuthContext);
   const [saving, setSaving] = useState(false);
+  const [showClaimed, setShowClaimed] = useState(false);
+  const [claimedData, setClaimedData] = useState([]);
+  const [claimedItems, setClaimedItems] = useState([]);
+  const [showClaimModal, setShowClaimModal] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -32,6 +37,30 @@ function SidebarProfile({ isOpen, setIsOpen }) {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    const fetchClaimedItems = async () => {
+      const response = await show_claimed();
+      // setClaimedData(response.data.claims);
+      response.data.claims.forEach(async (claim) => {
+        console.log("Fetching item for claim:", claim.item_id);
+        const itemResponse = await getManyItems(claim.item_id);
+        console.log("Fetched item data:", itemResponse.data);
+        setClaimedItems((prev) => [...prev, itemResponse.data]);
+      });
+      setShowClaimModal(true);
+    };
+    try {
+      if (showClaimed) {
+        fetchClaimedItems();
+      }
+    } catch (error) {
+      console.error("Error fetching claimed items:", error);
+    }
+    finally {
+      console.log("Final claimed items state:", claimedItems);
+    }
+  }, [showClaimed]);
 
   // 🔄 text input
   const handleChange = (e) => {
@@ -88,7 +117,7 @@ function SidebarProfile({ isOpen, setIsOpen }) {
       alert("Failed to save");
     } finally {
       setSaving(false);
-       // Refresh user data from server
+      // Refresh user data from server
       setUser((prev) => ({
         ...prev,
         name: user.name,
@@ -116,6 +145,16 @@ function SidebarProfile({ isOpen, setIsOpen }) {
   const handleLogout = () => {
     localStorage.removeItem("token");
     window.location.href = "/";
+  };
+
+  const handleDeleteClaim = async (itemId) => {
+    try {
+      await removeClaim(itemId);
+      setClaimedItems((prev) => prev.filter((item) => item._id !== itemId));
+      await fetchUser(); // Refresh user data to update claim status
+    } catch (error) {
+      console.error("Error deleting claim:", error);
+    }
   };
 
   return (
@@ -240,15 +279,24 @@ function SidebarProfile({ isOpen, setIsOpen }) {
                 }
                 disabled={(isEditing && !isFormValid()) || saving}
                 className={`px-4 py-2 text-white rounded-lg transition
-    ${isEditing && !isFormValid()
+                    ${isEditing && !isFormValid()
                     ? "bg-gray-400 cursor-not-allowed flex justify-center"
                     : "bg-blue-600 hover:opacity-90 flex justify-center"
                   } disabled:opacity-50 disabled:cursor-not-allowed
-  `}
+                   `}
               >
                 {isEditing ? "Save" : saving ? "Saving..." : "Edit"}
               </button>
             </div>
+            <button
+              onClick={() => setShowClaimed(true)}
+              className={`w-full py-3 text-white bg-green-400 disabled:bg-gray-300 hover:bg-green-300 disabled:cursor-not-allowed disabled:opacity-50
+                          rounded-lg transition`}
+              disabled={showClaimed}
+              hidden={about}
+            >
+              {showClaimed ? "Showing..." : "Show Claimed Items"}
+            </button>
 
             {/* LOGOUT */}
             <button
@@ -260,7 +308,79 @@ function SidebarProfile({ isOpen, setIsOpen }) {
 
           </div>
         </div>
+
       </div>
+      {showClaimModal && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          onClick={() => {setShowClaimModal(false); setClaimedItems([]); setShowClaimed(false); window.location.reload(); }}
+        >
+          {/* BACKDROP */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+          {/* MODAL */}
+          <div
+            className="relative bg-white rounded-xl w-[90%] max-w-lg p-6 shadow-xl animate-slideUp"
+            style={{maxHeight: "80vh", overflowY: "auto"}}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* CLOSE */}
+            <button
+              onClick={() => {setShowClaimModal(false); setClaimedItems([]); setShowClaimed(false); window.location.reload();}}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-lg font-semibold mb-4">
+              Claims ({claimedItems.length || 0})
+            </h2>
+
+            {(!claimedItems || claimedItems.length === 0) ? (
+              <p className="text-sm text-gray-500">No claims yet</p>
+            ) : (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                {claimedItems.map((claim, idx) => {
+                  const isPending = (claim.status === "open");
+                  return (
+                    <div
+                      key={idx}
+                      className="p-3 border rounded-lg flex justify-between items-center"
+                      onClick={() => { }}
+                    >
+                      <div>
+                        <p className="text-sm font-medium">
+                          {claim.title}
+                        </p>
+
+                        <p
+                          className={"text-gray-500"}
+                        >
+                          {claim.email} - {claim.location}
+                        </p>
+                      </div>
+
+                      {/* ACTIONS */}
+                      {isPending && (
+                        <div className="flex gap-2">
+
+                          <button
+                            onClick={() => handleDeleteClaim(claim._id)}
+                            disabled={!isPending}
+                            className="px-3 py-1 bg-red-500 text-white rounded disabled:opacity-50"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

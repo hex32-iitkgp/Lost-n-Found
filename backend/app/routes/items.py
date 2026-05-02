@@ -1,10 +1,11 @@
 # app/routes/items.py
 
+from typing import Optional
 from fastapi import APIRouter, Depends, UploadFile, File, Form, Query, HTTPException
 from app.utils.constants.categories import CATEGORIES
 from datetime import datetime
 from app.utils.dependencies import get_current_user
-from app.database.connection import items_collection
+from app.database.connection import items_collection, users_collection
 from app.services.cloudinary_service import upload_image
 from bson import ObjectId
 
@@ -19,7 +20,7 @@ async def create_item(
     category: str = Form(...),
     location: str = Form(...),
     type: str = Form(...),
-    image: UploadFile = File(None),
+    image: Optional[UploadFile] = File(None),
     user=Depends(get_current_user)
 ):
     #  Upload to Cloudinary
@@ -36,7 +37,7 @@ async def create_item(
         "status": "open",  # open / resolved
         "claims": []  # to store claim requests
     }
-    if (image.file) : 
+    if (image) : 
         image_url = upload_image(image.file)
         item["image_url"] = image_url
     
@@ -217,6 +218,9 @@ async def claim_item(
     if already_claimed:
         raise HTTPException(status_code=400, detail="Already claimed")
 
+    update_user_claims = {
+        "item_id": item_id,
+    }
 
     claim = {
         "user_id": str(user["_id"]),
@@ -227,6 +231,11 @@ async def claim_item(
     await items_collection.update_one(
         {"_id": ObjectId(item_id)},
         {"$push": {"claims": claim}}
+    )
+
+    await users_collection.update_one(
+        {"_id": user["_id"]},
+        {"$push": {"claimed": update_user_claims}}
     )
 
     return {"message": "Claim request sent"}
@@ -287,7 +296,56 @@ async def reject_claim(item_id: str, user_email: str, user=Depends(get_current_u
 
     return {"message": "Claim rejected"}
 
+@router.post("/{item_id}/claimsremove")
+async def remove_claim(item_id: str, user=Depends(get_current_user)):
+    print("Removing claim for item_id:", item_id, "user:", user["email"])
+    item = await items_collection.find_one({"_id": ObjectId(item_id)})
+    
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
 
+    # for claim in item.get("claims", []):
+    #     if claim["message"] == user["email"]:
+    #         item["claims"].remove(claim)
+    #         break
+
+    await items_collection.update_one(
+        {"_id": ObjectId(item_id)},
+        {"$pull": {"claims": {"message": user["email"] }}}
+    )
+
+    await users_collection.update_one(
+        {"_id": user["_id"]},
+        {"$pull": {"claimed": {"item_id": item_id }}}
+    )
+
+    return {"message": "Claim removed"}
+
+@router.get("/show_claimed")
+async def show_claimed(user=Depends(get_current_user)):
+    item = await users_collection.find_one({"name": user["name"]})
+    return {"claims": item.get("claimed", [])}
+
+print("Defining get_many_items endpoint...")
+
+@router.get("/many")
+async def get_many_items(
+    item_id: str = Query(default=None, alias="item_id"),
+    user=Depends(get_current_user)):
+
+    print("Received item_id:", item_id)
+    if not item_id:
+        return {"items": []}
+
+    object_ids = ObjectId(item_id)
+
+    item = await items_collection.find_one({"_id": object_ids})
+
+    if not item:
+        return {"items": []}
+
+    item["_id"] = str(item["_id"])
+    return item
 
 # @router.get("/{item_id}/claims")
 # async def get_claims(

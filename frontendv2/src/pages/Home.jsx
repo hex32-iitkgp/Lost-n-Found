@@ -1,7 +1,7 @@
 import Header from "../components/Header";
 import ItemCard from "../components/ItemCard";
-import { Plus, Search, ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
-import { act, use, useEffect, useState } from "react";
+import { Plus, Search, ArrowLeft, ArrowRight, ChevronRight, MapIcon, MapPin, X } from "lucide-react";
+import { act, use, useEffect, useState, useRef } from "react";
 import hero from "../assets/navbar.svg";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
@@ -45,6 +45,27 @@ function Home() {
   const [legOpen, setLegOpen] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imageToShow, setImageToShow] = useState(null);
+  const modalRef = useRef();
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (modalRef.current && !modalRef.current.contains(e.target)) {
+        setShowAIModal(false);
+        setAIitems([]);
+        setAiLoading(false);
+      }
+    };
+
+    if (showAIModal) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showAIModal]);
 
   window.onload = () => async function () {
     await fetchUser();
@@ -55,23 +76,26 @@ function Home() {
     }
   }();
 
-  useEffect(() => async () => {
-    if (showAIModal) {
-      setAiLoading(true);
-      const fetchRecommendation = async () => {
+  useEffect(() => {
+    const fetchAI = async () => {
+      if (showAIModal) {
         try {
+          setAiLoading(true);
+
           const res = await getAIrecommendation(selectedItem._id);
           setAIitems(res.data);
+
         } catch (err) {
           console.error(err);
-        }
-        finally {
+        } finally {
           setAiLoading(false);
         }
-      };
+      } else {
+        setAIitems([]);
+      }
+    };
 
-      fetchRecommendation();
-    }
+    fetchAI();
   }, [showAIModal]);
 
   useEffect(() => {
@@ -145,7 +169,14 @@ function Home() {
 
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === "Escape") setSelectedItem(null);
+      if (e.key === "Escape") {
+        setSelectedItem(null);
+        setShowImageModal(false);
+        setShowAIModal(false);
+        setShowCreateModal(false);
+        setShowEditModal(false);
+        setShowClaimsModal(false);
+      }
     };
 
     window.addEventListener("keydown", handleEsc);
@@ -199,10 +230,10 @@ function Home() {
           status: "pending",
         }]
       }));
-      alert("Claim sent");
+      // alert("Claim sent");
 
     } catch {
-      alert("Claim failed");
+      // alert("Claim failed");
     } finally {
       setClaiming(false);
       fetchItems(); // refresh list to show new claim
@@ -220,7 +251,7 @@ function Home() {
 
       await createItem(formData);
 
-      alert("Item submitted!");
+      // alert("Item submitted!");
 
       setShowCreateModal(false);
       setForm({
@@ -247,11 +278,11 @@ function Home() {
 
     try {
       await deleteItem(selectedItem._id);
-      alert("Deleted successfully");
+      // alert("Deleted successfully");
       setSelectedItem(null);
       fetchItems();
     } catch {
-      alert("Delete failed");
+      // alert("Delete failed");
     }
     finally {
       setDeleting(false);
@@ -275,7 +306,7 @@ function Home() {
         ),
       }));
     } catch {
-      alert("Error approving claim");
+      // alert("Error approving claim");
     } finally {
       fetchItems(); // refresh list to update statuses
       setProcessingClaim(null);
@@ -294,7 +325,7 @@ function Home() {
         ),
       }));
     } catch {
-      alert("Error rejecting claim");
+      // alert("Error rejecting claim");
     } finally {
       setProcessingClaim(null);
       fetchItems(); // refresh list to update statuses
@@ -318,7 +349,7 @@ function Home() {
 
       }));
     } catch {
-      alert("Error updating item");
+      // alert("Error updating item");
     } finally {
       await fetchItems(); // refresh list to update statuses
       setFinding(false);
@@ -334,7 +365,7 @@ function Home() {
       });
       formData.append("status", selectedItem.status); // keep status unchanged
       await updateItem(selectedItem._id, formData);
-      alert("Item updated!");
+      // alert("Item updated!");
       setShowEditModal(false);
       setEditForm({
         title: "",
@@ -346,7 +377,7 @@ function Home() {
       fetchItems(); // refresh list
     } catch (err) {
       console.error(err);
-      alert("Failed to update item");
+      // alert("Failed to update item");
     } finally {
       setEditing(false);
       setShowEditModal(false);
@@ -356,11 +387,27 @@ function Home() {
   };
 
   useEffect(() => {
+    setSearchText(""); 
+    setLocationText("");
     setPage(0);
   }, [activeTab, activeCategory]);
-
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
   useEffect(() => {
     fetchItems();
+    if (isFirstLoad) {
+      setIsFirstLoad(false);
+      return;
+    }
+    setTimeout(() => {
+      const slidex = document.querySelector(".slider");
+      if (slidex) {
+        slidex.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 50);
+
   }, [activeTab, activeCategory, page]);
 
   useEffect(() => {
@@ -371,11 +418,18 @@ function Home() {
     }
   }, [user, loadingo]);
 
+  const onCL = () => {
+    setActiveTab("my");
+    setActiveCategory("All");
+    setPage(0);
+    fetchItems();
+  }
+
   return (
     <div className="bg-gray-100 min-h-screen pb-20">
 
       {/* HEADER */}
-      <Header theme={activeTab === "my" ? "reports" : activeTab} shown={shown} />
+      <Header theme={activeTab === "my" ? "reports" : activeTab} shown={shown} onCL={onCL} />
       <LegendModal isOpen={legOpen} setIsOpen={setLegOpen} />
       {/* HERO */}
       <div
@@ -400,7 +454,7 @@ function Home() {
             Return what's theirs.
           </h1>
 
-          <p className="mt-4 text-white/70">
+          <p className="slider mt-4 text-white/70">
             Browse lost & found items reported across campus.
           </p>
         </div>
@@ -470,34 +524,46 @@ function Home() {
         </button>
 
       </div>
-      <div className="px-10 mt-4 flex justify-center">
-        <div className="bg-white rounded-full shadow-md flex items-center px-4 py-2 gap-2 max-w-4xl w-full">
+      <div className="px-10 sm:px-6 md:px-10 mt-4 flex justify-center">
+        <div className="bg-white bg-white/0 sm:bg-white/100 rounded-full flex flex-col sm:flex-row items-stretch sm:items-center px-4 py-2 gap-2 max-w-4xl w-full">
 
           {/* DESCRIPTION SEARCH */}
           <input
             type="text"
-            placeholder="Search items..."
+            placeholder="_Search items..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="flex-1 px-3 py-2 outline-none "
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                setPage(0); fetchItems();
+              }
+            }}
+            className="flex-1 w-full px-3 py-2  rounded-full outline-none "
           />
 
           {/* "IN" TEXT */}
-          <span className="text-gray-400 text-xl font-bold">{"<"}in{" >"}</span>
+          <span className="text-gray-400 text-center sm:text-2xl font-bold">{"<"}in{">"}</span>
 
           {/* LOCATION SEARCH */}
           <input
             type="text"
-            placeholder="Location..."
+            placeholder="_Location..."
             value={locationText}
             onChange={(e) => setLocationText(e.target.value)}
-            className="flex-1 px-3 py-2 outline-none text-sm"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                setPage(0); fetchItems();
+              }
+            }}
+            className="flex-1 px-3 py-3  rounded-full outline-none text-sm"
           />
 
           {/* SEARCH BUTTON */}
           <button
             onClick={() => { setPage(0); fetchItems(); }}
-            className="bg-found text-white p-2 scale-125 rounded-full hover:scale-100 transition"
+            className="bg-found text-white p-2 scale-125 sm:scale-125 rounded-full hover:scale-100 transition self-end sm:self-auto"
           >
             <Search size={20} />
           </button>
@@ -510,7 +576,7 @@ function Home() {
         {categories.map((cat) => (
           <button
             key={cat}
-            onClick={() => setActiveCategory(cat)}
+            onClick={() => {setActiveCategory(cat);}}
             className={`px-4 py-2 rounded-full text-sm transition
               ${activeCategory === cat
                 ? "bg-gray-800 text-white"
@@ -578,7 +644,7 @@ function Home() {
       </div>
 
       {/* FLOAT BUTTON */}
-      <button onClick={() => setShowCreateModal(true)} className={`fixed bottom-6 right-6 w-14 h-14 rounded-full text-white shadow-lg hover:scale-105 transition
+      <button onClick={() => setShowCreateModal(true)} className={`fixed bottom-6 right-6 w-14 h-14 rounded-full text-white shadow-lg hover:scale-105 z-50 transition
       ${activeTab === "found"
           ? "bg-found"
           : activeTab === "lost"
@@ -604,7 +670,9 @@ function Home() {
 
 
             {/* IMAGE */}
-            <div className="relative">
+            <div className="relative hover:cursor-pointer"
+              onClick={() => { setImageToShow(selectedItem.image_url || noimg); setShowImageModal(true); }}
+            >
               <img
                 src={selectedItem.image_url || noimg}
                 alt={selectedItem.title}
@@ -651,7 +719,8 @@ function Home() {
               </h2>
 
               <p className="text-gray-500 mt-2">
-                📍 {selectedItem.location}
+                <MapPin className="inline-block mr-1" />
+                {selectedItem.location}
               </p>
 
               <p className="text-sm mt-2">
@@ -724,11 +793,87 @@ function Home() {
             <div className="mt-2 flex justify-center">
               <button
                 onClick={() => setShowAIModal(true)}
-                className="w-64 py-2 rounded-2xl bg-gradient-to-r from-reportsStart to-reportsEnd text-white hover:opacity-70 transition"
+                className="w-64 py-2 rounded-2xl bg-gradient-to-r from-reportsStart to-reportsEnd text-white hover:opacity-70 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={aiLoading}
+                hidden={activeTab !== "my" || selectedItem.status === "resolved"}
               >
                 ✨ Get AI Recommendation
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {showAIModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+
+          {/* BACKDROP (visual only now) */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+          {/* MODAL */}
+          <div
+            ref={modalRef}
+            className="relative z-50 w-[70vw] h-[80vh] bg-white rounded-xl p-6 shadow-xl animate-slideUp"
+          >
+            <div className="flex justify-between items-center mr-4">
+              <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-reportsStart to-reportsEnd bg-clip-text text-transparent">
+                AI Recommendation
+              </h2>
+
+              <button onClick={() => setShowAIModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4 overflow-y-auto justify-center items-center h-full">
+              {(aiLoading) ? (
+                <span className="bg-gradient-to-r from-blue-500 via-blue-500 to-purple-500 
+                          bg-[length:300%_100%] scale-150 -translate-y-8 bg-clip-text text-transparent 
+                          animate-thinking font-semibold">
+                  Thinking...
+                </span>
+              ) : AIitems.length === 0 ? (
+                <p className="text-sm text-gray-500 -translate-y-8">No recommendations found</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                  {AIitems.map((item) => (
+                    <ItemCard key={item._id} item={item} onClick={() => setSelectedItem(item)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {showImageModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setShowImageModal(false)}
+        >
+          {/* BACKDROP */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+          {/* MODAL */}
+          <div
+            className="relative inline bg-white rounded-xl p-6 shadow-xl animate-slideUp"
+            style={{ maxWidth: "90vw", maxHeight: "90vh" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* CLOSE */}
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-lg font-semibold mb-4">Image Preview</h2>
+
+            <img
+              src={imageToShow || noimg}
+              alt="Preview"
+              className="w-full h-auto rounded-lg"
+              style={{ maxHeight: "80vh", objectFit: "contain" }}
+            />
           </div>
         </div>
       )}
@@ -743,6 +888,7 @@ function Home() {
           {/* MODAL */}
           <div
             className="relative bg-white rounded-xl w-[90%] max-w-lg p-6 shadow-xl animate-slideUp"
+            style={{ maxHeight: "80vh", overflowY: "auto" }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* CLOSE */}

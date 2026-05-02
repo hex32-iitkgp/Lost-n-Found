@@ -27,3 +27,12 @@ export const rejectClaim = (itemId, email) =>
 
 export const getAIrecommendation = (id) =>
   API.get(`/items/${id}/recommendation`);
+
+export const show_claimed = () =>
+  API.get("/items/show_claimed");
+
+export const getManyItems = (itemId) =>
+  API.get(`/items/many/`, { params: { item_id: itemId } });
+
+export const removeClaim = (itemId) =>
+  API.post(`/items/${itemId}/claimsremove`);

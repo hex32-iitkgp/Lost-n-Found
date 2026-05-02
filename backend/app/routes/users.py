@@ -23,6 +23,7 @@ async def update_profile(
     old_password: str = Form(alias="oldpassword", default=None),
     new_password: str = Form(alias="newpassword", default=None),
     profile_pic: UploadFile = File(None),
+    claimed: list = Form(default=None),
     user=Depends(get_current_user)
 ):
     update_data = {}

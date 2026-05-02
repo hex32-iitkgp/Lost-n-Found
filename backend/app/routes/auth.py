@@ -20,7 +20,8 @@ async def register(user: UserCreate):
         "name": user.name,
         "email": user.email,
         "password": hashed_pw,
-        "profile_pic": None
+        "profile_pic": None,
+        "claimed": [],
     }
 
     result = await users_collection.insert_one(new_user)

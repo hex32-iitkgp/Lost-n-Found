@@ -1,4 +1,6 @@
 import noimg from "../assets/noimg.png";
+import { MapPin } from "lucide-react";
+
 function ItemCard({ item, onClick }) {
   return (
     <div
@@ -52,7 +54,8 @@ function ItemCard({ item, onClick }) {
 
         {/* LOCATION */}
         <p className="text-sm text-gray-500 mt-1">
-          📍 {item.location}
+          <MapPin className="inline-block mr-1" />
+          {item.location}
         </p>
 
         {/* TIME */}

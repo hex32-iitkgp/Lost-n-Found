@@ -14,6 +14,7 @@ app.add_middleware(
 )
 # Routes
 from app.routes import items, users,auth
+print("Including routers...")
 app.include_router(auth.router)
 app.include_router(items.router)
 app.include_router(users.router)

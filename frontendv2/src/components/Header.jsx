@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import ppo from "../assets/ppo.png";
 
 
-function Header({ theme = "found", shown, about }) {
+function Header({ theme = "found", shown, about, onCL }) {
   const { user, fetchUser } = useContext(AuthContext);
   const [open, setOpen] = useState(false);
   const [fetchedUser, setFetchedUser] = useState(null);
@@ -38,7 +38,7 @@ function Header({ theme = "found", shown, about }) {
   }
 
   useEffect(() => {
-    if (!shown) {setShowDown(false);}
+    if (!shown) { setShowDown(false); }
   }, [shown]);
 
   return (
@@ -70,7 +70,7 @@ function Header({ theme = "found", shown, about }) {
         {/* RIGHT SECTION */}
         {(isLoggedIn) ? (
           <div
-            onClick={() => { about ? setShowDown(true) : setOpen(true), console.log("Opening sidebar for user:", user); }}
+            onClick={() => setShowDown(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md cursor-pointer hover:bg-white/20 hover:scale-[1.1] transition"
           >
             <div className="relative">
@@ -88,7 +88,7 @@ function Header({ theme = "found", shown, about }) {
               {/* Proper dropdown arrow */}
 
             </div>
-            {about ? <ChevronRight size={16} className="opacity-80" /> : <ChevronDown size={16} className="opacity-80" />}
+            <ChevronDown size={16} className="opacity-80" />
           </div>
         ) : (
           /* LOGIN BUTTON */
@@ -104,32 +104,48 @@ function Header({ theme = "found", shown, about }) {
       {
         showDown && (
           <div onClick={() => setShowDown(false)} className="fixed inset-0 z-50" >
-          <div
-            className="fixed top-20 right-6 w-40 bg-black/50 backdrop-blur-md border border-white/20 rounded-xl shadow-lg z-50 animate-slideUp"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => {
-                navigate("/home");
-              }}
-              className="w-full text-left px-4 py-3 hover:bg-white/50 transition text-white rounded-xl"
+            <div
+              className="fixed top-20 right-6 w-40 bg-black/50 backdrop-blur-md border border-white/20 rounded-xl shadow-lg z-50 animate-slideUp"
+              onClick={(e) => e.stopPropagation()}
             >
-              Home
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="w-full text-left px-4 py-3 hover:bg-red-500/50 transition text-red-300 rounded-xl"
-            >
-              Logout
-            </button>
-          </div>
+              <button
+                onClick={() => {
+                  window.location.href = "/home";
+                }}
+                className="w-full text-left px-4 py-3 hover:bg-white/50 transition text-white rounded-xl"
+              >
+                Home
+              </button>
+              <button
+                onClick={() => {
+                  {setOpen(true); setShowDown(false);}
+                }}
+                className="w-full text-left px-4 py-3 hover:bg-white/50 transition text-white rounded-xl"
+              >
+                Profile
+              </button>
+              <button
+                onClick={() => {
+                  {onCL(); setShowDown(false);}
+                }}
+                hidden={about}
+                className="w-full text-left px-4 py-3 hover:bg-white/50 transition text-white rounded-xl"
+              >
+                My Reports
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-3 hover:bg-red-500/50 transition text-red-300 rounded-xl"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         )
       }
 
       {/* Sidebar */}
-      <ProfileSidebar isOpen={open} setIsOpen={setOpen} user={user} />
+      <ProfileSidebar isOpen={open} setIsOpen={setOpen} about={about} user={user} />
     </>
   );
 }

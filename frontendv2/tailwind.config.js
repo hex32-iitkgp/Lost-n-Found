@@ -24,7 +24,7 @@ export default {
       },
 
       keyframes: {
-      slideUp: {
+        slideUp: {
           "0%": {
             opacity: "0",
             transform: "translateY(25px)",
@@ -34,10 +34,16 @@ export default {
             transform: "translateY(0)",
           },
         },
+        thinking: {
+          "0%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "125% 50%" },
+          "100%": { backgroundPosition: "0% 50%" },
+        },
       },
 
       animation: {
-      slideUp: "slideUp 0.3s ease-out forwards",
+        slideUp: "slideUp 0.3s ease-out forwards",
+        thinking: "thinking 10s linear infinite",
       },
     },
   },
