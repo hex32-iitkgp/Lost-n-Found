@@ -1,6 +1,6 @@
 import { use, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./about.css";
+import "./About.css";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import ppo from "../assets/ppo.png";
