@@ -219,7 +219,4 @@ __marimo__/
 
 # ...existing code...
 # Ignore sensitive backend files
-cloudinary_service.py
-connection.py
-qdrant_service.py
-# ...existing code...
+.env
