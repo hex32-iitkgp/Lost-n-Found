@@ -1,0 +1,7 @@
+fastapi
+pydantic
+pydantic[email]
+qdrant-client
+python-dotenv
+requests
+uvicorn

@@ -1,11 +1,11 @@
 import noimg from "../assets/noimg.png";
 import { MapPin } from "lucide-react";
 
-function ItemCard({ item, probability, onClick }) {
+function ItemCard({ item, probability = 0, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md hover:scale-[1.02] transition duration-200 cursor-pointer"
+      className={`bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md ${probability === 0 ? "hover:scale-[1.02]" : "border border-solid border-gray-300 hover:opacity-80"} transition duration-200 cursor-pointer`}
     >
       {/* IMAGE */}
       <div className="relative">

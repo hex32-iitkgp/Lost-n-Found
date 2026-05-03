@@ -189,6 +189,7 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
             onClick={handleImageClick}
+            disabled={!saving}
           >
             <img
               src={form.preview || noimg}

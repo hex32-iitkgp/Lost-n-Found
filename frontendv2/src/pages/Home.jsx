@@ -51,23 +51,21 @@ function Home() {
   const [claiming2, setClaiming2] = useState(false);
   const modalRef = useRef();
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (modalRef.current && !modalRef.current.contains(e.target)) {
-        setShowAIModal(false);
-        setAIitems([]);
-        setAiLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const handleClickOutside = (e) => {
+  //     if (modalRef.current && !modalRef.current.contains(e.target) && selectedItem2 === null) {
+  //       setShowAIModal(false);
+  //     }
+  //   };
 
-    if (showAIModal) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
+  //   if (showAIModal) {
+  //     document.addEventListener("mousedown", handleClickOutside);
+  //   }
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showAIModal]);
+  //   return () => {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   };
+  // }, [showAIModal]);
 
   window.onload = () => async function () {
     await fetchUser();
@@ -1135,6 +1133,7 @@ function Home() {
                 placeholder="Title"
                 value={form.title}
                 onChange={handleChange}
+                disabled={creating}
                 className="w-full p-3 border rounded-lg"
               />
 
@@ -1143,6 +1142,7 @@ function Home() {
                 placeholder="Description"
                 value={form.description}
                 onChange={handleChange}
+                disabled={creating}
                 className="w-full p-3 border rounded-lg"
               />
 
@@ -1151,6 +1151,7 @@ function Home() {
                 placeholder="Location"
                 value={form.location}
                 onChange={handleChange}
+                disabled={creating}
                 className="w-full p-3 border rounded-lg"
               />
 
@@ -1159,6 +1160,7 @@ function Home() {
                 name="category"
                 value={form.category}
                 onChange={handleChange}
+                disabled={creating}
                 className="w-full p-3 border rounded-lg"
               >
                 {categories
@@ -1172,6 +1174,7 @@ function Home() {
                 name="type"
                 value={form.type}
                 onChange={handleChange}
+                disabled={creating}
                 className="w-full p-3 border rounded-lg"
               >
                 <option value="lost">Lost</option>
@@ -1181,6 +1184,7 @@ function Home() {
               {/* IMAGE */}
               <input
                 type="file"
+                disabled={creating}
                 onChange={handleFileChange}
                 className="w-full"
               />

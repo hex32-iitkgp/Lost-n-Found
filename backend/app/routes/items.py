@@ -1,6 +1,6 @@
 # app/routes/items.py
-
 from typing import Optional
+import uuid
 from fastapi import APIRouter, Depends, UploadFile, File, Form, Query, HTTPException
 from app.utils.constants.categories import CATEGORIES
 from datetime import datetime
@@ -8,14 +8,15 @@ from app.utils.dependencies import get_current_user
 from app.database.connection import items_collection, users_collection
 from app.services.cloudinary_service import upload_image
 from bson import ObjectId
-from app.services.embedding import get_text_embedding, get_image_embedding
+import os
+import dotenv
 from app.services.qdrant_service import upsert_item  # we’ll create this next
-from app.services.qdrant_service import search_text, search_image
 import requests
-from io import BytesIO
-from PIL import Image
-import torch
-from app.services.qdrant_service import get_item_vectors
+
+dotenv.load_dotenv()
+TEXT_EMBED_URL = os.getenv("TEXT_EMBED_URL")
+IMAGE_EMBED_URL = os.getenv("IMAGE_EMBED_URL")
+SEARCH_SERVICE_URL = os.getenv("SEARCH_SERVICE_URL")
 
 router = APIRouter(prefix="/items", tags=["Items"])
 
@@ -32,6 +33,7 @@ async def create_item(
     image: Optional[UploadFile] = File(None),
     user=Depends(get_current_user)
 ):
+    qid = uuid.uuid4()
     item = {
         "title": title,
         "description": description,
@@ -42,43 +44,62 @@ async def create_item(
         "email": user["email"],
         "date_reported": datetime.utcnow(),
         "status": "open",
+        "qid": str(qid),
         "claims": []
     }
 
     image_vector = None
-
-    # --------- IMAGE UPLOAD + EMBEDDING ---------
     if image:
         image_url = upload_image(image.file)
         item["image_url"] = image_url
 
         try:
-            image.file.seek(0)  # important
-            image_vector = get_image_embedding(image.file)
+            image_vector = requests.post(
+                IMAGE_EMBED_URL,
+                json={"image_url": image_url}
+            ).json().get("vector")
         except Exception as e:
             print("Image embedding error:", e)
             image_vector = None
 
     # --------- SAVE TO MONGO ---------
-    result = await items_collection.insert_one(item)
-    item_id = str(result.inserted_id)
+    
 
     # --------- TEXT EMBEDDING ---------
-    text_vector = get_text_embedding(title, description, category)
+    text_input = f"{title}. {description}. {category}"
+
+    text_vector = requests.post(
+        TEXT_EMBED_URL,
+        json={"text": text_input}
+    ).json()["vector"]
 
     # --------- STORE IN QDRANT ---------
-    upsert_item(   # ❗ removed await
-        item_id=item_id,
-        text_vector=text_vector,
-        image_vector=image_vector,
-        payload={
-            "mongo_id": item_id,
-            "type": type,
-            "status": "open",
-            "category": category,
-            "owner_id": str(user["_id"]),   # ✅ REQUIRED
-        }
-    )
+    async def store_in_qdrant(qid, item_id, text_vector, image_vector, type, category, user):
+        try:
+            upsert_item(   # ❗ removed await since upsert_item is not async
+                qid=qid,
+                text_vector=text_vector,
+                image_vector=image_vector,
+                payload={
+                    "mongo_id": item_id,
+                    "type": type,
+                    "status": "open",
+                    "category": category,
+                    "owner_id": str(user["_id"]),
+                }
+            )
+        except Exception as e:
+            print("Qdrant upsert error:", e)
+            raise HTTPException(status_code=500, detail="Failed to store item vector")
+    try:
+        result = await items_collection.insert_one(item)
+        item_id = str(result.inserted_id)
+        await store_in_qdrant(qid, item_id, text_vector, image_vector, item["type"], item["category"], user)
+    except Exception as e:
+        print("Error saving item:", e)
+        if item_id:
+            delete_result = await items_collection.delete_one({"_id": ObjectId(item_id)})
+            print("Rollback delete result:", delete_result.deleted_count)
 
     return {
         "message": "Item created successfully",
@@ -224,6 +245,11 @@ async def delete_item(
         raise HTTPException(status_code=403, detail="Not authorized")
 
     await items_collection.delete_one({"_id": ObjectId(item_id)})
+    if item.get("qid"):
+        try:
+            await delete_item(item["qid"])  # Delete from Qdrant using qid
+        except Exception as e:
+            print("Error deleting from Qdrant:", e)
 
     return {"message": "Item deleted successfully"}
 
@@ -387,70 +413,46 @@ async def get_many_items(
 
 @router.get("/{item_id}/recommendation")
 async def get_ai_recommendation(item_id: str, user=Depends(get_current_user)):
-    # --------- 1. Fetch selected item ---------
+
     item = await items_collection.find_one({"_id": ObjectId(item_id)})
-    exclude_owner_id = str(user["_id"])
     if not item:
         return {"items": []}
-    
-    text_vector, image_vector = get_item_vectors(item_id)
 
-    if text_vector is None:
+    # --------- CALL SEARCH SERVICE ---------
+    try:
+        res = requests.post(
+            SEARCH_SERVICE_URL,
+            json={
+                "qid": item.get("qid"),
+                "type": item.get("type"),
+                "exclude_owner_id": str(user["_id"]),
+                "limit": 10
+            }
+        ).json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Search service error")
         return {"items": []}
 
-    # if text_vector is None:
-    #     print("Vector missing, fallback to embedding")
-    #     text_vector = get_text_embedding(...)
+    results = res.get("results", [])
 
-    target_type = get_opposite_type(item.get("type"))
-
-    # --------- 3. Qdrant searches ---------
-    text_results = search_text(text_vector, target_type, exclude_owner_id, limit=10)
-
-    image_results = []
-    if image_vector is not None:
-        image_results = search_image(image_vector, target_type, exclude_owner_id, limit=10)
-    
-    scores = {}  # mongo_id -> score
-
-    # text scores (weight 0.6)
-    for r in text_results:
-        mongo_id = r.payload.get("mongo_id")
-        if not mongo_id:
-            continue
-        scores[mongo_id] = scores.get(mongo_id, 0) + (0.6 * r.score)
-
-    # image scores (weight 0.4)
-    for r in image_results:
-        mongo_id = r.payload.get("mongo_id")
-        if not mongo_id:
-            continue
-        scores[mongo_id] = scores.get(mongo_id, 0) + (0.4 * r.score)
-
-    # --------- 5. Rank ---------
-    sorted_ids = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-    top_ids = [mid for mid, _ in sorted_ids[:10]]
-
-    if not top_ids:
+    if not results:
         return {"items": []}
 
-    # --------- 6. Fetch full items ---------
-    object_ids = [ObjectId(mid) for mid in top_ids]
+    # --------- FETCH ITEMS ---------
+    object_ids = [ObjectId(r["mongo_id"]) for r in results]
 
     cursor = items_collection.find({"_id": {"$in": object_ids}})
 
     items = []
     async for it in cursor:
         it["_id"] = str(it["_id"])
-        it["probability"]=scores.get(it["_id"], 0)  # add score to item data
+        it["probability"] = next(
+            (r["score"] for r in results if r["mongo_id"] == it["_id"]),
+            0
+        )
         items.append(it)
 
-    # --------- 7. Preserve ranking order ---------
-    # id_to_item = {it["_id"]: it for it in items}
-    # ordered_items = [id_to_item[mid] for mid in top_ids if mid in id_to_item]
-
     return {"items": items}
-
 
 # @router.get("/{item_id}/claims")
 # async def get_claims(

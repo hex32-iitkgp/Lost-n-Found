@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.services.qdrant_service import create_collection
+from app.services.qdrant_service import create_collection, create_payload_indexes
+import dotenv
 
+dotenv.load_dotenv()
 create_collection()
+create_payload_indexes()
 app = FastAPI()
 
 

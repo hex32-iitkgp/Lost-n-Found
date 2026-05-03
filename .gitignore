@@ -220,3 +220,4 @@ __marimo__/
 # ...existing code...
 # Ignore sensitive backend files
 .env
+deploycodes

@@ -1,0 +1,10 @@
+fastapi
+pydantic
+pydantic[email]
+qdrant-client
+python-dotenv
+requests
+uvicorn
+pillow
+torch
+git+https://github.com/openai/CLIP.git

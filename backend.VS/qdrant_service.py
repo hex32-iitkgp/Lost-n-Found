@@ -9,9 +9,18 @@ from qdrant_client.models import (
     FieldCondition,
     MatchValue
 )
-import os
 import dotenv
+import os
 from qdrant_client.models import PayloadSchemaType
+
+dotenv.load_dotenv()
+QDRANT_URL = os.getenv("QDRANT_URL")
+COLLECTION_NAME = "items"  
+
+client = QdrantClient(
+    url=os.getenv("QDRANT_URL"),
+    api_key=os.getenv("QDRANT_API_KEY"),
+)
 
 def create_payload_indexes():
     fields = ["type", "status", "owner_id"]
@@ -24,57 +33,50 @@ def create_payload_indexes():
         )
 
 
-dotenv.load_dotenv()
-COLLECTION_NAME = "items"
-client = QdrantClient(
-    url=os.getenv("QDRANT_URL"),
-    api_key=os.getenv("QDRANT_API_KEY"),
-)
-
 # --------- CREATE COLLECTION (run once on startup) ---------
-def create_collection():
-    # print("URL:", QDRANT_URL, "API Key:", os.getenv("QDRANT_API_KEY"))
-    existing = [c.name for c in client.get_collections().collections]
+# def create_collection():
+#     # print("URL:", QDRANT_URL, "API Key:", os.getenv("QDRANT_API_KEY"))
+#     existing = [c.name for c in client.get_collections().collections]
 
-    if COLLECTION_NAME in existing:
-        return
+#     if COLLECTION_NAME in existing:
+#         return
 
-    client.create_collection(
-        collection_name=COLLECTION_NAME,
-        vectors_config={
-            "text": VectorParams(size=384, distance=Distance.COSINE),
-            "image": VectorParams(size=512, distance=Distance.COSINE),
-        }
-    )
+#     client.create_collection(
+#         collection_name=COLLECTION_NAME,
+#         vectors_config={
+#             "text": VectorParams(size=384, distance=Distance.COSINE),
+#             "image": VectorParams(size=512, distance=Distance.COSINE),
+#         }
+#     )
 
-    print("Qdrant collection created")
+#     print("Qdrant collection created")
 
 
 # --------- UPSERT ITEM ---------
-def upsert_item(qid, text_vector, image_vector, payload):
-    vectors = {
-        "text": text_vector,
-    }
+# def upsert_item(item_id, text_vector, image_vector, payload):
+#     vectors = {
+#         "text": text_vector,
+#     }
 
-    # image optional
-    if image_vector:
-        vectors["image"] = image_vector
+#     # image optional
+#     if image_vector:
+#         vectors["image"] = image_vector
 
-    client.upsert(
-        collection_name=COLLECTION_NAME,
-        points=[
-            PointStruct(
-                id=qid,
-                vector=vectors,
-                payload=payload
-            )
-        ]
-    )
+#     client.upsert(
+#         collection_name=COLLECTION_NAME,
+#         points=[
+#             PointStruct(
+#                 id=item_id,
+#                 vector=vectors,
+#                 payload=payload
+#             )
+#         ]
+#     )
 
-def get_item_vectors(item_id: str):
+def get_item_vectors(qid: str):
     result = client.retrieve(
         collection_name=COLLECTION_NAME,
-        ids=[item_id],
+        ids=[qid],
         with_vectors=True,
         with_payload=False,
     )
@@ -118,24 +120,19 @@ def build_filter(target_type, exclude_owner_id):
     )
 
 def search_text(query_vector, target_type, exclude_owner_id, limit=10):
-    return client.search(
+    return client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=("text", query_vector),
+        query=query_vector,          # ✅ vector only
+        using="text",               # ✅ specify which vector
         limit=limit,
         query_filter=build_filter(target_type, exclude_owner_id)
     )
-
 
 def search_image(query_vector, target_type, exclude_owner_id, limit=10):
-    return client.search(
+    return client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=("image", query_vector),
+        query=query_vector,          # ✅ vector only
+        using="image",              # ✅ specify which vector
         limit=limit,
         query_filter=build_filter(target_type, exclude_owner_id)
-    )
-
-def delete_item(qid):
-    client.delete(
-        collection_name=COLLECTION_NAME,
-        points_selector={"ids": [qid]}
     )
