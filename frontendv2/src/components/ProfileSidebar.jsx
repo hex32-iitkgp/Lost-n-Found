@@ -11,6 +11,7 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
   const [claimedData, setClaimedData] = useState([]);
   const [claimedItems, setClaimedItems] = useState([]);
   const [showClaimModal, setShowClaimModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -24,6 +25,9 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
   const [hover, setHover] = useState(false);
   const fileRef = useRef();
   const [passChange, setPassChange] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imageToShow, setImageToShow] = useState(null);
+
   useEffect(() => {
     if (user && !isEditing) {
       setForm({
@@ -74,6 +78,14 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
   const handleImageClick = () => {
     fileRef.current.click();
   };
+
+  const openModal = (item) => {
+    setSelectedItem(item);
+  }
+
+  const closeModal = () => {
+    setSelectedItem(null);
+  }
 
   // 📸 preview image
   const handleFileChange = (e) => {
@@ -342,13 +354,13 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
             ) : (
               <div className="space-y-3 max-h-[400px] overflow-y-auto">
                 {claimedItems.map((claim, idx) => {
-                  const isClaimAccepted = claim.claims.some(c => c.status === "accepted" && c.email === user.email);
+                  const isClaimAccepted = claim.claims.some(c => c.status === "accepted" && c.message === user.email);
                   const isPending = (claim.status === "open");
                   return (
                     <div
                       key={idx}
                       className="p-3 border rounded-lg flex justify-between items-center"
-                      onClick={() => { }}
+                      onClick={() => openModal(claim)}
                     >
                       <div>
                         <p className="text-sm font-medium">
@@ -383,6 +395,126 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
           </div>
         </div>
       )}
+      {selectedItem && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => closeModal()} // 👈 click outside closes
+        >
+          {/* BACKDROP */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+          {/* MODAL */}
+          <div
+            className="relative bg-white rounded-xl w-[90%] max-w-2xl p-6 shadow-xl animate-slideUp"
+            onClick={(e) => e.stopPropagation()} // 👈 prevents closing when clicking inside
+          >
+            {/* CLOSE BUTTON */}
+
+
+            {/* IMAGE */}
+            <div className="relative hover:cursor-pointer"
+              onClick={() => { setImageToShow(selectedItem.image_url || noimg); setShowImageModal(true); }}
+            >
+              <img
+                src={selectedItem.image_url || noimg}
+                alt={selectedItem.title}
+                className="w-full h-60 object-cover rounded-lg"
+              />
+
+              {/* BADGE */}
+              <span
+                className={`absolute top-3 right-3 px-3 py-1 text-xs font-semibold rounded-full text-white shadow-md
+    ${selectedItem.status === "resolved"
+                    ? "bg-blue-600"
+
+                    : selectedItem.claims && selectedItem.claims.length > 0
+                      ? "bg-green-600"
+                      : "bg-red-500"
+                  }`}
+              >
+                {
+                  selectedItem.status === "resolved"
+                    ? (selectedItem.type === "found" ? "APPROVED" : "Lost -> Found")
+                    : selectedItem.type === "lost"
+                      ? "LOST"
+                      : selectedItem.claims && selectedItem.claims.length > 0
+                        ? "CLAIMED"
+                        : "UNCLAIMED"
+                }
+              </span>
+            </div>
+            <button
+              onClick={() => closeModal()}
+              className="absolute top-4 right-4 
+             w-8 h-8 flex items-center justify-center 
+             rounded-full 
+             bg-black backdrop-blur-md 
+             hover:scale-125 text-white
+             transition"
+            >
+              ✕
+            </button>
+            {/* CONTENT */}
+            <div className="mt-4">
+              <h2 className="text-2xl font-semibold">
+                {selectedItem.title}<span className="ml-2 text-sm font-normal text-gray-500">.{selectedItem.category}</span>
+              </h2>
+
+              <p className="text-gray-500 mt-2">
+                <MapPin className="inline-block mr-1" />
+                {selectedItem.location}
+              </p>
+
+              <p className="text-sm mt-2">
+                {selectedItem.description || "No description"}
+              </p>
+            </div>
+            <div className="mt-2 text-sm text-gray-500">
+              <span className="font-medium text-gray-700">Contact:</span>{" "}
+              <a
+                href={`mailto:${selectedItem.email}`}
+                className="text-blue-600 hover:underline"
+              >
+                {selectedItem.email}
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+      {showImageModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setShowImageModal(false)}
+        >
+          {/* BACKDROP */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+          {/* MODAL */}
+          <div
+            className="relative inline bg-white rounded-xl p-6 shadow-xl animate-slideUp"
+            style={{ maxWidth: "90vw", maxHeight: "90vh" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* CLOSE */}
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-lg font-semibold mb-4">Image Preview</h2>
+
+            <img
+              src={imageToShow || noimg}
+              alt="Preview"
+              className="w-full h-auto rounded-lg"
+              style={{ maxHeight: "80vh", objectFit: "contain" }}
+            />
+          </div>
+        </div>
+      )}
+
     </>
   );
 }
