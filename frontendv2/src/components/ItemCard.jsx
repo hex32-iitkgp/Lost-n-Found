@@ -49,7 +49,7 @@ function ItemCard({ item, probability = 0, onClick }) {
 
         {/* TITLE */}
         <h2 className="font-semibold text-md mt-1">
-          {item.title}<span className="text-gray-400 text-sm">.{item.category}</span>
+          {item.title}
         </h2>
 
         {/* LOCATION */}
