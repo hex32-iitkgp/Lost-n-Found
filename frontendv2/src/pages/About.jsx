@@ -218,7 +218,7 @@ function About() {
           /* LOGIN BUTTON */
           <button
             onClick={() => window.location.href = "/login"}
-            className="flex items-center scale-[1.2] gap-2 px-5 py-2 rounded-full text-white -translate-y-[42px] bg-white/10 backdrop-blur-md transition hover:bg-white/20 hover:scale-[1.2] text-sm font-medium"
+            className="flex items-center scale-[1.3] gap-2 px-5 py-2 rounded-full text-white -translate-y-[42px] bg-white/10 backdrop-blur-md transition hover:bg-white/20 hover:scale-[1.4] text-sm font-medium"
           >
             Login / Sign Up
           </button>
