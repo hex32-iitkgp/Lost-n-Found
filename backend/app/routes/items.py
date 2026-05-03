@@ -53,53 +53,53 @@ async def create_item(
         image_url = upload_image(image.file)
         item["image_url"] = image_url
 
-        try:
-            image_vector = requests.post(
-                IMAGE_EMBED_URL,
-                json={"image_url": image_url}
-            ).json().get("vector")
-        except Exception as e:
-            print("Image embedding error:", e)
-            image_vector = None
+        # try:
+        #     image_vector = requests.post(
+        #         IMAGE_EMBED_URL,
+        #         json={"image_url": image_url}
+        #     ).json().get("vector")
+        # except Exception as e:
+        #     print("Image embedding error:", e)
+        #     image_vector = None
 
     # --------- SAVE TO MONGO ---------
     
 
     # --------- TEXT EMBEDDING ---------
-    text_input = f"{title}. {description}. {category}"
+    # text_input = f"{title}. {description}. {category}"
 
-    text_vector = requests.post(
-        TEXT_EMBED_URL,
-        json={"text": text_input}
-    ).json()["vector"]
+    # text_vector = requests.post(
+    #     TEXT_EMBED_URL,
+    #     json={"text": text_input}
+    # ).json()["vector"]
 
     # --------- STORE IN QDRANT ---------
-    async def store_in_qdrant(qid, item_id, text_vector, image_vector, type, category, user):
-        try:
-            upsert_item(   # ❗ removed await since upsert_item is not async
-                qid=qid,
-                text_vector=text_vector,
-                image_vector=image_vector,
-                payload={
-                    "mongo_id": item_id,
-                    "type": type,
-                    "status": "open",
-                    "category": category,
-                    "owner_id": str(user["_id"]),
-                }
-            )
-        except Exception as e:
-            print("Qdrant upsert error:", e)
-            raise HTTPException(status_code=500, detail="Failed to store item vector")
-    try:
-        result = await items_collection.insert_one(item)
-        item_id = str(result.inserted_id)
-        await store_in_qdrant(qid, item_id, text_vector, image_vector, item["type"], item["category"], user)
-    except Exception as e:
-        print("Error saving item:", e)
-        if item_id:
-            delete_result = await items_collection.delete_one({"_id": ObjectId(item_id)})
-            print("Rollback delete result:", delete_result.deleted_count)
+    # async def store_in_qdrant(qid, item_id, text_vector, image_vector, type, category, user):
+    #     try:
+    #         upsert_item(   # ❗ removed await since upsert_item is not async
+    #             qid=qid,
+    #             text_vector=text_vector,
+    #             image_vector=image_vector,
+    #             payload={
+    #                 "mongo_id": item_id,
+    #                 "type": type,
+    #                 "status": "open",
+    #                 "category": category,
+    #                 "owner_id": str(user["_id"]),
+    #             }
+    #         )
+    #     except Exception as e:
+    #         print("Qdrant upsert error:", e)
+    #         raise HTTPException(status_code=500, detail="Failed to store item vector")
+    # try:
+    result = await items_collection.insert_one(item)
+    item_id = str(result.inserted_id)
+    #     await store_in_qdrant(qid, item_id, text_vector, image_vector, item["type"], item["category"], user)
+    # except Exception as e:
+    #     print("Error saving item:", e)
+    #     if item_id:
+    #         delete_result = await items_collection.delete_one({"_id": ObjectId(item_id)})
+    #         print("Rollback delete result:", delete_result.deleted_count)
 
     return {
         "message": "Item created successfully",
@@ -414,43 +414,43 @@ async def get_many_items(
 @router.get("/{item_id}/recommendation")
 async def get_ai_recommendation(item_id: str, user=Depends(get_current_user)):
 
-    item = await items_collection.find_one({"_id": ObjectId(item_id)})
-    if not item:
-        return {"items": []}
+    # item = await items_collection.find_one({"_id": ObjectId(item_id)})
+    # if not item:
+    #     return {"items": []}
 
-    # --------- CALL SEARCH SERVICE ---------
-    try:
-        res = requests.post(
-            SEARCH_SERVICE_URL,
-            json={
-                "qid": item.get("qid"),
-                "type": item.get("type"),
-                "exclude_owner_id": str(user["_id"]),
-                "limit": 10
-            }
-        ).json()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Search service error")
-        return {"items": []}
+    # # --------- CALL SEARCH SERVICE ---------
+    # try:
+    #     res = requests.post(
+    #         SEARCH_SERVICE_URL,
+    #         json={
+    #             "qid": item.get("qid"),
+    #             "type": item.get("type"),
+    #             "exclude_owner_id": str(user["_id"]),
+    #             "limit": 10
+    #         }
+    #     ).json()
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail="Search service error")
+    #     return {"items": []}
 
-    results = res.get("results", [])
+    # results = res.get("results", [])
 
-    if not results:
-        return {"items": []}
+    # if not results:
+    #     return {"items": []}
 
-    # --------- FETCH ITEMS ---------
-    object_ids = [ObjectId(r["mongo_id"]) for r in results]
+    # # --------- FETCH ITEMS ---------
+    # object_ids = [ObjectId(r["mongo_id"]) for r in results]
 
-    cursor = items_collection.find({"_id": {"$in": object_ids}})
+    # cursor = items_collection.find({"_id": {"$in": object_ids}})
 
     items = []
-    async for it in cursor:
-        it["_id"] = str(it["_id"])
-        it["probability"] = next(
-            (r["score"] for r in results if r["mongo_id"] == it["_id"]),
-            0
-        )
-        items.append(it)
+    # async for it in cursor:
+    #     it["_id"] = str(it["_id"])
+    #     it["probability"] = next(
+    #         (r["score"] for r in results if r["mongo_id"] == it["_id"]),
+    #         0
+    #     )
+    #     items.append(it)
 
     return {"items": items}
 
