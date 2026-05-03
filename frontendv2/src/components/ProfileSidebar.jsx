@@ -3,6 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import { show_claimed, getManyItems, removeClaim } from "../services/items";
 import noimg from "../assets/ppo.png";
 import { updateUser } from "../services/auth";
+import { MapPin } from "lucide-react";
 
 function SidebarProfile({ isOpen, setIsOpen, about }) {
   const { user, fetchUser, setUser } = useContext(AuthContext);
