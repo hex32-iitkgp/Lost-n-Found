@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from qdrant_service import get_item_vectors, search_text
 
 
-app = FastAPI()
+app = FastAPI(redirect_slashes=False)
 
 class SearchInput(BaseModel):
     qid: str

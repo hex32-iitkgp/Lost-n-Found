@@ -6,7 +6,7 @@ from io import BytesIO
 import clip
 import torch
 
-app = FastAPI()
+app = FastAPI(redirect_slashes=False)
 
 device = "cpu"
 model, preprocess = clip.load("ViT-B/32", device=device)

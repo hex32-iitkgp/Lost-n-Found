@@ -6,7 +6,7 @@ import dotenv
 dotenv.load_dotenv()
 create_collection()
 create_payload_indexes()
-app = FastAPI()
+app = FastAPI(redirect_slashes=False)
 
 
 # CORS (must be here)
