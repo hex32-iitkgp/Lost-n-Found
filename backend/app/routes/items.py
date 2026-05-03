@@ -98,8 +98,8 @@ async def create_item(
     except Exception as e:
         print("Error saving item vector to Qdrant:", e)
         if item_id:
-            delete_result = await items_collection.delete_one({"_id": ObjectId(item_id)})
-            print("Rollback delete result:", delete_result.deleted_count)
+            await items_collection.delete_one({"_id": ObjectId(item_id)})
+            print("Rollback delete result")
             raise HTTPException(status_code=500, detail="Failed to create item")
 
     return {
@@ -246,6 +246,10 @@ async def delete_item(
         raise HTTPException(status_code=403, detail="Not authorized")
 
     await items_collection.delete_one({"_id": ObjectId(item_id)})
+    await users_collection.update_many(
+        {"claimed.item_id": item_id},
+        {"$pull": {"claimed": {"item_id": item_id}}}
+    )
     if item.get("qid"):
         try:
             await delete_item(item["qid"])  # Delete from Qdrant using qid
