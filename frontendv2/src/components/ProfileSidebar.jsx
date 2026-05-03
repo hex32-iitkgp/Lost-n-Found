@@ -361,11 +361,10 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
                     <div
                       key={idx}
                       className="p-3 border rounded-lg flex justify-between items-center"
-                      onClick={() => openModal(claim)}
                     >
                       <div>
                         <p className="text-sm font-medium">
-                          {claim.title}
+                          <a href="#" className="text-black hover:underline" onClick={() => openModal(claim)}>{claim.title}</a>
                         </p>
 
                         <p
