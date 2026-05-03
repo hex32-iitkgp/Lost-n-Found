@@ -314,7 +314,7 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
       {showClaimModal && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center"
-          onClick={() => {setShowClaimModal(false); setClaimedItems([]); setShowClaimed(false); window.location.reload(); }}
+          onClick={() => { setShowClaimModal(false); setClaimedItems([]); setShowClaimed(false); window.location.reload(); }}
         >
           {/* BACKDROP */}
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
@@ -322,12 +322,12 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
           {/* MODAL */}
           <div
             className="relative bg-white rounded-xl w-[90%] max-w-lg p-6 shadow-xl animate-slideUp"
-            style={{maxHeight: "80vh", overflowY: "auto"}}
+            style={{ maxHeight: "80vh", overflowY: "auto" }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* CLOSE */}
             <button
-              onClick={() => {setShowClaimModal(false); setClaimedItems([]); setShowClaimed(false); window.location.reload();}}
+              onClick={() => { setShowClaimModal(false); setClaimedItems([]); setShowClaimed(false); window.location.reload(); }}
               className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20"
             >
               ✕
@@ -363,18 +363,18 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
                       </div>
 
                       {/* ACTIONS */}
-                      {isPending && (
-                        <div className="flex gap-2">
 
-                          <button
-                            onClick={() => handleDeleteClaim(claim._id)}
-                            disabled={!isPending}
-                            className="px-3 py-1 bg-red-500 text-white rounded disabled:opacity-50"
-                          >
-                            {isPending ? "Remove" : isClaimAccepted ? "Accepted" : "Rejected"}
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex gap-2">
+
+                        <button
+                          onClick={() => handleDeleteClaim(claim._id)}
+                          disabled={!isPending}
+                          className="px-3 py-1 bg-red-500 text-white rounded disabled:opacity-50"
+                        >
+                          {isPending ? "Remove" : isClaimAccepted ? "Accepted" : "Rejected"}
+                        </button>
+                      </div>
+
                     </div>
                   );
                 })}
