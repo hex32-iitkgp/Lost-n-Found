@@ -90,12 +90,12 @@ def get_item_vectors(qid: str):
 
     if isinstance(vector_data, dict):
         text_vector = vector_data.get("text")
-        image_vector = vector_data.get("image")
+        # image_vector = vector_data.get("image")
     else:
         text_vector = vector_data
-        image_vector = None
+        # image_vector = None
 
-    return text_vector, image_vector
+    return text_vector
 
 
 
@@ -128,11 +128,11 @@ def search_text(query_vector, target_type, exclude_owner_id, limit=10):
         query_filter=build_filter(target_type, exclude_owner_id)
     )
 
-def search_image(query_vector, target_type, exclude_owner_id, limit=10):
-    return client.query_points(
-        collection_name=COLLECTION_NAME,
-        query=query_vector,          # ✅ vector only
-        using="image",              # ✅ specify which vector
-        limit=limit,
-        query_filter=build_filter(target_type, exclude_owner_id)
-    )
+# def search_image(query_vector, target_type, exclude_owner_id, limit=10):
+#     return client.query_points(
+#         collection_name=COLLECTION_NAME,
+#         query=query_vector,          # ✅ vector only
+#         using="image",              # ✅ specify which vector
+#         limit=limit,
+#         query_filter=build_filter(target_type, exclude_owner_id)
+#     )

@@ -43,7 +43,6 @@ def create_collection():
         collection_name=COLLECTION_NAME,
         vectors_config={
             "text": VectorParams(size=384, distance=Distance.COSINE),
-            "image": VectorParams(size=512, distance=Distance.COSINE),
         }
     )
 
@@ -51,14 +50,10 @@ def create_collection():
 
 
 # --------- UPSERT ITEM ---------
-def upsert_item(qid, text_vector, image_vector, payload):
+def upsert_item(qid, text_vector, payload):
     vectors = {
         "text": text_vector,
     }
-
-    # image optional
-    if image_vector:
-        vectors["image"] = image_vector
 
     client.upsert(
         collection_name=COLLECTION_NAME,
@@ -88,51 +83,49 @@ def get_item_vectors(item_id: str):
 
     if isinstance(vector_data, dict):
         text_vector = vector_data.get("text")
-        image_vector = vector_data.get("image")
     else:
         text_vector = vector_data
-        image_vector = None
 
-    return text_vector, image_vector
-
+    return text_vector
 
 
-def build_filter(target_type, exclude_owner_id):
-    return Filter(
-        must=[
-            FieldCondition(
-                key="type",
-                match=MatchValue(value=target_type)
-            ),
-            FieldCondition(
-                key="status",
-                match=MatchValue(value="open")
-            )
-        ],
-        must_not=[
-            FieldCondition(
-                key="owner_id",
-                match=MatchValue(value=exclude_owner_id)
-            )
-        ]
-    )
 
-def search_text(query_vector, target_type, exclude_owner_id, limit=10):
-    return client.search(
-        collection_name=COLLECTION_NAME,
-        query_vector=("text", query_vector),
-        limit=limit,
-        query_filter=build_filter(target_type, exclude_owner_id)
-    )
+# def build_filter(target_type, exclude_owner_id):
+#     return Filter(
+#         must=[
+#             FieldCondition(
+#                 key="type",
+#                 match=MatchValue(value=target_type)
+#             ),
+#             FieldCondition(
+#                 key="status",
+#                 match=MatchValue(value="open")
+#             )
+#         ],
+#         must_not=[
+#             FieldCondition(
+#                 key="owner_id",
+#                 match=MatchValue(value=exclude_owner_id)
+#             )
+#         ]
+#     )
+
+# def search_text(query_vector, target_type, exclude_owner_id, limit=10):
+#     return client.search(
+#         collection_name=COLLECTION_NAME,
+#         query_vector=("text", query_vector),
+#         limit=limit,
+#         query_filter=build_filter(target_type, exclude_owner_id)
+#     )
 
 
-def search_image(query_vector, target_type, exclude_owner_id, limit=10):
-    return client.search(
-        collection_name=COLLECTION_NAME,
-        query_vector=("image", query_vector),
-        limit=limit,
-        query_filter=build_filter(target_type, exclude_owner_id)
-    )
+# def search_image(query_vector, target_type, exclude_owner_id, limit=10):
+#     return client.search(
+#         collection_name=COLLECTION_NAME,
+#         query_vector=("image", query_vector),
+#         limit=limit,
+#         query_filter=build_filter(target_type, exclude_owner_id)
+#     )
 
 def delete_item(qid):
     client.delete(
