@@ -2,13 +2,13 @@
 import API from "./api";
 
 export const getItems = (params) =>
-  API.get("/items", { params });
+  API.get("/items/", { params });
 
 export const getMyItems = (params) =>
   API.get("/items/my", { params });
 
 export const createItem = (formData) =>
-  API.post("/items", formData);
+  API.post("/items/", formData);
 
 export const deleteItem = (id) =>
   API.delete(`/items/${id}`);
@@ -32,7 +32,7 @@ export const show_claimed = () =>
   API.get("/items/show_claimed");
 
 export const getManyItems = (itemId) =>
-  API.get(`/items/many/`, { params: { item_id: itemId } });
+  API.get(`/items/many`, { params: { item_id: itemId } });
 
 export const removeClaim = (itemId) =>
   API.post(`/items/${itemId}/claimsremove`);
