@@ -843,7 +843,7 @@ function Home() {
           {/* MODAL */}
           <div
             ref={modalRef}
-            className="relative z-50 w-[70vw] h-[80vh] bg-white rounded-xl p-6 shadow-xl animate-slideUp"
+            className="relative z-50 w-[80vw] h-[80vh] bg-white rounded-xl p-6 shadow-xl animate-slideUp"
           >
             <div className="flex justify-between items-center mr-4">
               <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-reportsStart to-reportsEnd bg-clip-text text-transparent">

@@ -47,7 +47,7 @@ def search(data: SearchInput):
     for r in text_results.points:
         mid = r.payload.get("mongo_id")
         if mid:
-            scores[mid] = scores.get(mid, 0) + (0.6 * r.score)
+            scores[mid] = scores.get(mid, 0) + (r.score)
 
     # for r in image_results.points:
     #     mid = r.payload.get("mongo_id")
