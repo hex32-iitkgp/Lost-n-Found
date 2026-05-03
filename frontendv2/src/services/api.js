@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://lost-n-found-0.onrender.com", // FastAPI
+  baseURL: "https://thriving-wonder-production-7ee4.up.railway.app/", // FastAPI
 });
 
 // attach token automatically
