@@ -398,7 +398,7 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
       )}
       {selectedItem && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-[60] flex items-center justify-center"
           onClick={() => closeModal()} // 👈 click outside closes
         >
           {/* BACKDROP */}
@@ -484,7 +484,7 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
       )}
       {showImageModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-[60] flex items-center justify-center"
           onClick={() => setShowImageModal(false)}
         >
           {/* BACKDROP */}
