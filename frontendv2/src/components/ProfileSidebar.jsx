@@ -369,7 +369,7 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
                         <button
                           onClick={() => handleDeleteClaim(claim._id)}
                           disabled={!isPending}
-                          className="px-3 py-1 bg-red-500 text-white rounded disabled:opacity-50"
+                          className={`px-3 py-1 ${isPending ? "bg-red-500" : isClaimAccepted ? "bg-green-500" : "bg-gray-500"} text-white rounded disabled:opacity-50`}
                         >
                           {isPending ? "Remove" : isClaimAccepted ? "Accepted" : "Rejected"}
                         </button>
