@@ -189,7 +189,7 @@ function About() {
         </h1>
 
         <p className="hero-sub fade-up">
-          Your institute's smarter way to reunite people with their belongings —
+          A Smarter Way to reunite people with their belongings —
           no chaotic WhatsApp threads, no missed messages.
         </p>
         {(isLoggedIn) ? (
@@ -238,7 +238,7 @@ function About() {
             WhatsApp groups were never<br />built for this.
           </h2>
           <p className="section-body fade-up">
-            Every institution has the same story: someone loses a water bottle,
+            Every community has the same story: someone loses a water bottle,
             posts in the class group, gets buried under 200 unread messages, and
             the item sits unclaimed in a corner for weeks. The information is
             there — it's just invisible.
@@ -269,7 +269,7 @@ function About() {
           </h2>
           <p className="section-body section-body-light fade-up">
             LOST&amp;FOUND splits the noise into signal — a dedicated space
-            filtered to your institute, where every post is a data point, not
+            , where every post is a data point, not
             a distraction.
           </p>
 
@@ -313,7 +313,7 @@ function About() {
             </h2>
             <p className="section-body">
               When you post a lost item, our AI recommendation engine scans
-              every found listing in your institute and surfaces the most likely
+              every found listings and surfaces the most likely
               matches ranked by relevance. No manual scrolling. No guesswork.
             </p>
             <ul className="ai-list">
@@ -364,8 +364,8 @@ function About() {
             {[
               {
                 step: "01",
-                title: "Sign up with your institute",
-                body: "Your feed is automatically filtered to only show items from within your campus. No noise from other institutions.",
+                title: "Sign up with your email",
+                body: "Simple, secure registration using your email, then you’re in.",
               },
               {
                 step: "02",
