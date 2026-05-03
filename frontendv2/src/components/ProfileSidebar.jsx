@@ -342,6 +342,7 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
             ) : (
               <div className="space-y-3 max-h-[400px] overflow-y-auto">
                 {claimedItems.map((claim, idx) => {
+                  const isClaimAccepted = claim.claims.some(c => c.status === "accepted" && c.user_id === user._id);
                   const isPending = (claim.status === "open");
                   return (
                     <div
@@ -370,7 +371,7 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
                             disabled={!isPending}
                             className="px-3 py-1 bg-red-500 text-white rounded disabled:opacity-50"
                           >
-                            Remove
+                            {isPending ? "Remove" : isClaimAccepted ? "Accepted" : "Rejected"}
                           </button>
                         </div>
                       )}
