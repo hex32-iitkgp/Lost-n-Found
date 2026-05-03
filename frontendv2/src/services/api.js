@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://127.0.0.1:8000", // FastAPI
+  baseURL: "https://lost-n-found-0.onrender.com:8000", // FastAPI
 });
 
 // attach token automatically
