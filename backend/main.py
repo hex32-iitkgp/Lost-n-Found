@@ -12,7 +12,7 @@ app = FastAPI(redirect_slashes=False)
 # CORS (must be here)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # for development
+    allow_origins=["https://lost--n--found.vercel.app"],  # for development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
