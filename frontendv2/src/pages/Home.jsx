@@ -305,7 +305,10 @@ function Home() {
 
   const handleDelete = async () => {
     setDeleting(true);
-    if (!confirm("Delete this item?")) return;
+    if (!confirm("Delete this item?")) {
+      setDeleting(false);
+      return;
+    }
 
     try {
       await deleteItem(selectedItem._id);
