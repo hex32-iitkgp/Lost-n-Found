@@ -268,6 +268,7 @@ from fastapi import Query
 @router.post("/claim")
 async def claim_item(
     item_id: str = Form(...),
+    user_name: str = Form(...),
     message: str = Form(...),
     user=Depends(get_current_user)
 ):
@@ -293,6 +294,7 @@ async def claim_item(
 
     claim = {
         "user_id": str(user["_id"]),
+        "user_name": user_name,
         "message": message,
         "status": "pending"
     }

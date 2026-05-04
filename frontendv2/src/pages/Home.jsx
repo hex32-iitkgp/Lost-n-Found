@@ -220,6 +220,7 @@ function Home() {
       console.log("Claiming item with ID:", selectedItem._id);
       const formdat = new FormData();
       formdat.append("item_id", String(selectedItem._id));
+      formdat.append("user_name", user.name);
       formdat.append("message", user.email);
       await claimItem(selectedItem._id, formdat);
       setSelectedItem(prev => ({
@@ -1058,7 +1059,7 @@ function Home() {
                     >
                       <div>
                         <p className="text-sm font-medium">
-                          {claim.message} {/* email */}
+                          {claim.user_name}<span className="text-gray-500 text-xs"><a href={`mailto:${claim.message}`}>{"("+claim.message+")"}</a></span>
                         </p>
 
                         <p

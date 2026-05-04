@@ -17,7 +17,7 @@ const Footer = () => {
           </p>
           <br />
           <h3 style={{ marginBottom: "4px", fontSize: "20px", fontWeight: "bold" }}>Contact</h3>
-          <p>Email: support.lnf@gmail.com</p>
+          <p>Email: <a href="mailto:support.lnf2026@gmail.com">support.lnf2026@gmail.com</a></p>
           <p>Made with ❤️ at IIT Kharagpur</p>
         </div>
 
