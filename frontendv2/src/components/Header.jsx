@@ -92,12 +92,20 @@ function Header({ theme = "found", shown, about, onCL }) {
           </div>
         ) : (
           /* LOGIN BUTTON */
+          <>
           <button
             onClick={() => window.location.href = "/login"}
-            className="flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 backdrop-blur-md transition hover:bg-white/20 hover:scale-[1.1] text-sm font-medium"
+            className="flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 backdrop-blur-md transition hover:bg-white/20 hover:scale-[1.1] text-sm font-medium max-sm:hidden"
           >
             Login / Sign Up
           </button>
+          <button
+            onClick={() => window.location.href = "/login"}
+            className="flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 backdrop-blur-md transition hover:bg-white/20 hover:scale-[1.1] text-sm font-medium sm:hidden"
+          >
+            Login
+          </button>
+          </>
         )}
       </header>
 

@@ -519,11 +519,12 @@ function Home() {
             const isDisabled = (tab === "my" && !isLoggedIn);
 
             return (
+              <>
               <button
                 key={tab}
                 onClick={() => !isDisabled && setActiveTab(tab)}
                 disabled={isDisabled}
-                className={`flex-1 py-2 text-sm font-medium z-10 transition
+                className={`flex-1 py-2 text-sm font-medium z-10 transition max-sm:hidden
                     ${activeTab === tab ? "text-white" : "text-gray-700"}
                     ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}
                   `}
@@ -534,13 +535,29 @@ function Home() {
                     ? "Lost"
                     : "My Reports"}
               </button>
+              <button
+                key={tab}
+                onClick={() => !isDisabled && setActiveTab(tab)}
+                disabled={isDisabled}
+                className={`flex-1 py-2 text-sm font-medium z-10 transition sm:hidden
+                    ${activeTab === tab ? "text-white" : "text-gray-700"}
+                    ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}
+                  `}
+              >
+                {tab === "found"
+                  ? "Found"
+                  : tab === "lost"
+                    ? "Lost"
+                    : "Mine"}
+              </button>
+              </>
             );
           })}
 
         </div>
 
         {/* RESULT COUNT */}
-        <span className={`ml-4 px-4 py-2 text-sm rounded-full
+        <span className={`ml-4 px-4 py-2 text-sm rounded-full max-sm:hidden transition
                 ${activeTab === "found"
             ? "bg-green-100 text-green-700"
             : activeTab === "lost"
@@ -549,9 +566,22 @@ function Home() {
           }`}>
           {items.length} results
         </span>
-        <button className="ml-3 rounded-full bg-black/80 p-2 hover:bg-gray-400 text-sm text-white transition"
+        <span className={`ml-4 px-4 py-2 text-sm rounded-full sm:hidden transition
+                ${activeTab === "found"
+            ? "bg-green-100 text-green-700"
+            : activeTab === "lost"
+              ? "bg-red-100 text-red-700"
+              : "bg-gradient-to-br from-reportsStart to-reportsEnd text-white opacity-60"
+          }`}>
+          {items.length}
+        </span>
+        <button className="ml-3 rounded-full bg-black/80 p-2 hover:bg-gray-400 text-sm text-white transition max-sm:hidden"
           onClick={() => setLegOpen(true)}>
           Legend {">"}
+        </button>
+        <button className="ml-3 rounded-full bg-black/80 p-2 hover:bg-gray-400 text-sm text-white transition sm:hidden"
+          onClick={() => setLegOpen(true)}>
+          Legend
         </button>
 
       </div>
@@ -602,7 +632,7 @@ function Home() {
         </div>
       </div>
       {/* CATEGORY CHIPS */}
-      <div className="px-10 mt-6 flex flex-wrap gap-3">
+      <div className="sm:px-10 sm:mt-6 max-sm:px-2 max-sm:py-2 flex max-sm:overflow-x-auto max-sm:whitespace-nowrap max-sm:gap-2 scrollbar-hide sm:flex-wrap sm:gap-3">
 
         {categories.map((cat) => (
           <button
