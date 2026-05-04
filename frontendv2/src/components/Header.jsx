@@ -83,8 +83,8 @@ function Header({ theme = "found", shown, about, onCL }) {
             </div>
 
             {/* Slightly smaller text */}<div className="flex flex-col leading-tight">
-              <span className="text-sm font-medium">{(user?.name) ? "Welcome Back," : "Profile"}</span>
-              <span className={`text-xs text-white/70 ${(user?.name) ? "" : " hidden"}`}>{(user?.name) ? user?.name : ""}</span>
+              <span className="text-sm font-medium max-sm:hidden">{(user?.name) ? "Welcome Back," : "Profile"}</span>
+              <span className={`text-xs text-white/70 max-sm:hidden ${(user?.name) ? "" : " hidden"}`}>{(user?.name) ? user?.name : ""}</span>
               {/* Proper dropdown arrow */}
 
             </div>
