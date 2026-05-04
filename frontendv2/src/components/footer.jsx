@@ -25,10 +25,10 @@ const Footer = () => {
         <div className="footer-section">
           <h3 style={{ marginBottom: "8px", fontSize: "20px", fontWeight: "bold" }}>Quick Links</h3>
           <ul>
-            <li><a onClick={() => navigate("/")}>Home</a></li>
-            <li><a onClick={() => navigate("/")}>Browse Items</a></li>
-            <li><a onClick={() => navigate("/login")}>Login / Sign Up</a></li>
-            <li><a onClick={() => navigate("/about")}>About Us</a></li>
+            <li><a onClick={() => {navigate("/"); window.scrollTo(0, 0);}}>Home</a></li>
+            <li><a onClick={() => {navigate("/"); window.scrollTo(0, 0);}}>Browse Items</a></li>
+            <li><a onClick={() => {navigate("/login"); window.scrollTo(0, 0);}}>Login / Sign Up</a></li>
+            <li><a onClick={() => {navigate("/about"); window.scrollTo(0, 0);}}>About Us</a></li>
           </ul>
         </div>
 
