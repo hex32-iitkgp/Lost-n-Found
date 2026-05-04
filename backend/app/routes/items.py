@@ -6,11 +6,11 @@ from app.utils.constants.categories import CATEGORIES
 from datetime import datetime
 from app.utils.dependencies import get_current_user
 from app.database.connection import items_collection, users_collection
-from app.services.cloudinary_service import upload_image
+from app.services.cloudinary_service import upload_image, delete_cloudinary_image
 from bson import ObjectId
 import os
 import dotenv
-from app.services.qdrant_service import upsert_item  # we’ll create this next
+from app.services.qdrant_service import upsert_item, delete_item_qdrant  # we’ll create this next
 import requests
 
 dotenv.load_dotenv()
@@ -99,6 +99,7 @@ async def create_item(
         print("Error saving item vector to Qdrant:", e)
         if item_id:
             await items_collection.delete_one({"_id": ObjectId(item_id)})
+            delete_item_qdrant(str(qid))  # Rollback Qdrant entry if exists
             print("Rollback delete result")
             raise HTTPException(status_code=500, detail="Failed to create item")
 
@@ -148,8 +149,6 @@ async def get_items(
 
     return items
 
-
-from fastapi import Query
 
 @router.get("/my")
 async def get_my_items(
@@ -245,25 +244,22 @@ async def delete_item(
     if item["owner_id"] != str(user["_id"]):
         raise HTTPException(status_code=403, detail="Not authorized")
 
+    if item.get("qid"):
+        try:
+            delete_item_qdrant(item["qid"])  # Delete from Qdrant using qid
+        except Exception as e:
+            print("Error deleting from Qdrant:", e)
+
+    if item.get("image_url"):
+        delete_cloudinary_image(item["image_url"])
+
     await items_collection.delete_one({"_id": ObjectId(item_id)})
     await users_collection.update_many(
         {"claimed.item_id": item_id},
         {"$pull": {"claimed": {"item_id": item_id}}}
     )
-    if item.get("qid"):
-        try:
-            await delete_item(item["qid"])  # Delete from Qdrant using qid
-        except Exception as e:
-            print("Error deleting from Qdrant:", e)
 
     return {"message": "Item deleted successfully"}
-
-from fastapi import Query
-from bson import ObjectId
-
-from fastapi import Query
-
-
 
 @router.post("/claim")
 async def claim_item(

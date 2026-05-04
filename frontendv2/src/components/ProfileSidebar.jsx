@@ -355,7 +355,7 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
             ) : (
               <div className="space-y-3 max-h-[400px] overflow-y-auto">
                 {claimedItems.map((claim, idx) => {
-                  const isClaimAccepted = claim.claims.some(c => c.status === "accepted" && c.message === user.email);
+                  const isClaimAccepted = claim.claims.some(c => c.status === "approved" && c.message === user.email);
                   const isPending = (claim.status === "open");
                   return (
                     <div

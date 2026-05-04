@@ -1059,7 +1059,7 @@ function Home() {
                     >
                       <div>
                         <p className="text-sm font-medium">
-                          {claim.user_name}<span className="text-gray-500 text-xs"><a href={`mailto:${claim.message}`}>{"("+claim.message+")"}</a></span>
+                          {claim.user_name}<span className="text-gray-500 text-xs"><a href={`mailto:${claim.message}`}>{" ("+claim.message+")"}</a></span>
                         </p>
 
                         <p

@@ -14,3 +14,14 @@ cloudinary.config(
 def upload_image(file):  #  make it sync
     result = cloudinary.uploader.upload(file)
     return result["secure_url"]
+
+
+def delete_cloudinary_image(image_url: str):
+    try:
+        parts = image_url.split("/")
+        public_id_with_ext = "/".join(parts[-2:])
+        public_id = public_id_with_ext.split(".")[0]
+
+        cloudinary.uploader.destroy(public_id)
+    except Exception as e:
+        print("Cloudinary delete error:", e)

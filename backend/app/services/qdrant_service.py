@@ -127,7 +127,7 @@ def get_item_vectors(item_id: str):
 #         query_filter=build_filter(target_type, exclude_owner_id)
 #     )
 
-def delete_item(qid):
+def delete_item_qdrant(qid):
     client.delete(
         collection_name=COLLECTION_NAME,
         points_selector={"ids": [qid]}
