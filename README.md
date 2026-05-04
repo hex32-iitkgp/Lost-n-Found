@@ -52,14 +52,14 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # Run the service
-uvicorn main:app --reload
+uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 **Dependencies:** pydantic, qdrant-client, python-dotenv, requests, fastapi, uvicorn, pymongo, cloudinary, motor, argon2-cffi, passlib, python-jose
 
 ---
 
-#### 2. **backend.IE** (Image Embedding Service)
+#### 2. **backend.IE** (Image Embedding Service) >> Currently excluded from App
 ```bash
 cd backend.IE
 
@@ -76,7 +76,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # Run the service
-uvicorn main:app --reload
+uvicorn app:app --host 0.0.0.0 --port 8002
 ```
 
 **Dependencies:** fastapi, pydantic, qdrant-client, python-dotenv, requests, uvicorn, pillow, torch, CLIP
@@ -100,7 +100,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # Run the service
-uvicorn main:app --reload
+uvicorn app:app --host 0.0.0.0 --port 8001
 ```
 
 **Dependencies:** fastapi, uvicorn, pydantic, sentence-transformers
@@ -124,7 +124,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # Run the service
-uvicorn main:app --reload
+uvicorn app:app --host 0.0.0.0 --port 8003
 ```
 
 **Dependencies:** fastapi, pydantic, qdrant-client, python-dotenv, requests, uvicorn
@@ -175,6 +175,9 @@ CLOUDINARY_NAME=your_cloudinary_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 SECRET_KEY=your_secret_key
+TEXT_EMBED_URL="http://localhost:8001/embed"
+IMAGE_EMBED_URL="http://localhost:8002/embed"
+SEARCH_SERVICE_URL="http://localhost:8003/search"
 ```
 
 ---
@@ -194,21 +197,21 @@ uvicorn main:app --reload --port 8000
 ```bash
 cd backend.IE
 source .venv/bin/activate
-uvicorn main:app --reload --port 8001
+uvicorn app:app --reload --port 8002
 ```
 
 **Terminal 3 - Text Embedding Service:**
 ```bash
 cd backend.TE
 source .venv/bin/activate
-uvicorn main:app --reload --port 8002
+uvicorn app:app --reload --port 8001
 ```
 
 **Terminal 4 - Vector Search Service:**
 ```bash
 cd backend.VS
 source .venv/bin/activate
-uvicorn main:app --reload --port 8003
+uvicorn app:app --reload --port 8003
 ```
 
 **Terminal 5 - Frontend:**
