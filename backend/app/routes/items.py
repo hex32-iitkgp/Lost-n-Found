@@ -45,6 +45,7 @@ async def create_item(
         "date_reported": datetime.utcnow(),
         "status": "open",
         "qid": str(qid),
+        "user_name": user["name"],
         "claims": []
     }
 

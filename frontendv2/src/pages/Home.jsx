@@ -4,6 +4,7 @@ import { Plus, Search, ArrowLeft, ArrowRight, ChevronRight, MapIcon, MapPin, X }
 import { act, use, useEffect, useState, useRef } from "react";
 import hero from "../assets/navbar.svg";
 import { useContext } from "react";
+import React from "react";
 import { AuthContext } from "../context/AuthContext";
 import noimg from "../assets/noimg.png";
 import { getItems, getMyItems, claimItem, createItem, deleteItem, approveClaim, rejectClaim, updateItem, getAIrecommendation } from "../services/items";
@@ -421,7 +422,7 @@ function Home() {
   };
 
   useEffect(() => {
-    setSearchText(""); 
+    setSearchText("");
     setLocationText("");
     setPage(0);
   }, [activeTab, activeCategory]);
@@ -522,38 +523,37 @@ function Home() {
             const isDisabled = (tab === "my" && !isLoggedIn);
 
             return (
-              <>
-              <button
-                key={tab}
-                onClick={() => !isDisabled && setActiveTab(tab)}
-                disabled={isDisabled}
-                className={`flex-1 py-2 text-sm font-medium z-10 transition max-sm:hidden
-                    ${activeTab === tab ? "text-white" : "text-gray-700"}
-                    ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}
-                  `}
-              >
-                {tab === "found"
-                  ? "Found"
-                  : tab === "lost"
-                    ? "Lost"
-                    : "My Reports"}
-              </button>
-              <button
-                key={tab}
-                onClick={() => !isDisabled && setActiveTab(tab)}
-                disabled={isDisabled}
-                className={`flex-1 py-2 text-sm font-medium z-10 transition sm:hidden
-                    ${activeTab === tab ? "text-white" : "text-gray-700"}
-                    ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}
-                  `}
-              >
-                {tab === "found"
-                  ? "Found"
-                  : tab === "lost"
-                    ? "Lost"
-                    : "Mine"}
-              </button>
-              </>
+              <React.Fragment key={tab}>
+                <button
+                  onClick={() => !isDisabled && setActiveTab(tab)}
+                  disabled={isDisabled}
+                  className={`flex-1 py-2 text-sm font-medium z-10 transition max-sm:hidden
+          ${activeTab === tab ? "text-white" : "text-gray-700"}
+          ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}
+        `}
+                >
+                  {tab === "found"
+                    ? "Found"
+                    : tab === "lost"
+                      ? "Lost"
+                      : "My Reports"}
+                </button>
+
+                <button
+                  onClick={() => !isDisabled && setActiveTab(tab)}
+                  disabled={isDisabled}
+                  className={`flex-1 py-2 text-sm font-medium z-10 transition sm:hidden
+          ${activeTab === tab ? "text-white" : "text-gray-700"}
+          ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}
+        `}
+                >
+                  {tab === "found"
+                    ? "Found"
+                    : tab === "lost"
+                      ? "Lost"
+                      : "Mine"}
+                </button>
+              </React.Fragment>
             );
           })}
 
@@ -790,6 +790,9 @@ function Home() {
               <p className="text-sm mt-2">
                 {selectedItem.description || "No description"}
               </p>
+              <p className="text-sm mt-2 text-gray-500">
+                Reported by: <span className="font-medium text-gray-700">{selectedItem.user_name || "User"}</span>
+              </p>
             </div>
             <div className="mt-2 text-sm text-gray-500">
               <span className="font-medium text-gray-700">Contact:</span>{" "}
@@ -900,9 +903,12 @@ function Home() {
                 <p className="text-sm text-gray-500 -translate-y-8">No recommendations found</p>
               ) : (
                 <div className="fixed grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-h-[68vh] overflow-y-auto w-full px-4"
-                      style={{ transform: "translateY(-4%)"}}
+                  style={{ transform: "translateY(-4%)" }}
                 >
-                  {AIitems.map((item) => (
+                  {AIitems
+                          .filter((item) => item.status !== "resolved")
+                          .sort((a, b) => b.probability - a.probability)
+                          .map((item) => (
                     <ItemCard key={item._id} item={item} probability={item.probability} onClick={() => setSelectedItem2(item)} />
                   ))}
                 </div>
@@ -983,6 +989,9 @@ function Home() {
 
               <p className="text-sm mt-2">
                 {selectedItem2.description || "No description"}
+              </p>
+              <p className="text-sm mt-2 text-gray-500">
+                Reported by: <span className="font-medium text-gray-700">{selectedItem2.user_name || "User"}</span>
               </p>
             </div>
             <div className="mt-2 text-sm text-gray-500">
@@ -1092,7 +1101,7 @@ function Home() {
                     >
                       <div>
                         <p className="text-sm font-medium">
-                          {claim.user_name}<span className="text-gray-500 text-xs"><a href={`mailto:${claim.message}`}>{" ("+claim.message+")"}</a></span>
+                          {claim.user_name}<span className="text-gray-500 text-xs"><a href={`mailto:${claim.message}`}>{" (" + claim.message + ")"}</a></span>
                         </p>
 
                         <p

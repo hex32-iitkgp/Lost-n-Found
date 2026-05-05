@@ -468,6 +468,9 @@ function SidebarProfile({ isOpen, setIsOpen, about }) {
               <p className="text-sm mt-2">
                 {selectedItem.description || "No description"}
               </p>
+              <p className="text-sm mt-2 text-gray-500">
+                Reported by: <span className="font-medium text-gray-700">{selectedItem.user_name || "User"}</span>
+              </p>
             </div>
             <div className="mt-2 text-sm text-gray-500">
               <span className="font-medium text-gray-700">Contact:</span>{" "}
