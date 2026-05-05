@@ -59,7 +59,7 @@ function Header({ theme = "found", shown, about, onCL }) {
           {/* Logo + Text */}
           <div className="flex flex-col leading-tight hover:cursor-pointer" onClick={() => navigate("/about")}>
             <h1 className="text-xl font-bold tracking-wide font-serifCustom">
-              Lost&Found
+              {`${window.innerWidth < 640 ? "L&F" : "Lost & Found"}`}
             </h1>
             <span className="text-[9px] tracking-[3px] text-white/70">
               CAMPUS NETWORK
